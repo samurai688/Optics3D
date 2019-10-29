@@ -15,6 +15,12 @@ plt.close("all")
 max_ray_run_distance = 150 # mm
 
 
+
+a = 6
+b = 9
+c = a + b
+
+
 mirror1_pos = np.array([0, 50, 0])
 mirror1_normal = np.array([0, -1, 0])
 
