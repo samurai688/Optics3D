@@ -10,7 +10,6 @@ Created on Fri Jan 11 21:47:48 2019
 import numpy as np
 from optics3d import Ray, Lens
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 plt.close("all")
 
 lens_center = np.array([0, 50, 0])

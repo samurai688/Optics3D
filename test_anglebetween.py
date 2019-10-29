@@ -8,7 +8,7 @@ Created on Sat Dec  8 23:47:35 2018
 
 import pytest
 import numpy as np
-from optics3d import angle_between
+from general_optics import angle_between
 
 
 v1_list = [

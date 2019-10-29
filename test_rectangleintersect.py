@@ -8,7 +8,8 @@ Created on Sat Dec  8 23:47:35 2018
 
 import pytest
 import numpy as np
-from optics3d import Ray, Rectangle, intersectRectangle
+from optics3d import Ray
+from Shapes.shapes import Rectangle, intersectRectangle
 
 
 

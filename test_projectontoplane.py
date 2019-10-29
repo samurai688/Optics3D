@@ -8,7 +8,7 @@ Created on Sun Dec  9 22:49:09 2018
 
 import pytest
 import numpy as np
-from optics3d import project_onto_plane
+from general_optics import project_onto_plane
 
 vectors_to_project = [
     np.array([1, 1, 1]),

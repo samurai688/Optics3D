@@ -7,8 +7,9 @@ Created on Sat Dec  8 23:47:35 2018
 """
 
 import numpy as np
-from optics3d import Mirror, project_onto_plane
+from optics3d import Mirror
 from general import set_axes_equal
+from general_optics import project_onto_plane
 import matplotlib.pyplot as plt
 plt.close("all")
 

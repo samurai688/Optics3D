@@ -7,10 +7,10 @@ Created on Sat Dec  8 23:47:35 2018
 """
 
 import numpy as np
-from general import wavelength_to_rgb
-from optics3d import Ray, Grating, rotation_matrix_axis_angle
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
+from general import wavelength_to_rgb, set_axes_equal
+from general_optics import rotation_matrix_axis_angle
+from optics3d import Ray, Grating
 plt.close("all")
 
 
@@ -74,36 +74,15 @@ for ray in Ray_list:
 # 3d plots
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-xlim = [0, 0]
-ylim = [0, 0]
-zlim = [0, 0]
+ax.set_aspect('equal')
 for optic in Optic_list:
     optic.draw(ax, view="3d")
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
     ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-", color=wavelength_to_rgb(ray.wavelength, gamma=1.0))
-    if np.min(ray_history[:, 0]) < xlim[0]:
-        xlim[0] = np.min(ray_history[:, 0])
-    if np.max(ray_history[:, 0]) > xlim[1]:
-        xlim[1] = np.max(ray_history[:, 0])
-    if np.min(ray_history[:, 1]) < ylim[0]:
-        ylim[0] = np.min(ray_history[:, 1])
-    if np.max(ray_history[:, 1]) > ylim[1]:
-        ylim[1] = np.max(ray_history[:, 1])
-    if np.min(ray_history[:, 2]) < zlim[0]:
-        zlim[0] = np.min(ray_history[:, 2])
-    if np.max(ray_history[:, 2]) > zlim[1]:
-        zlim[1] = np.max(ray_history[:, 2])
-# Create cubic bounding box to simulate equal aspect ratio
-max_range = np.array([xlim[1] - xlim[0], ylim[1] - ylim[0], zlim[1] - zlim[0]]).max()
-Xb = 0.5*max_range*np.mgrid[-1:2:2, -1:2:2, -1:2:2][0].flatten() + 0.5 * (xlim[1] + xlim[0])
-Yb = 0.5*max_range*np.mgrid[-1:2:2, -1:2:2, -1:2:2][1].flatten() + 0.5 * (ylim[1] + ylim[0])
-Zb = 0.5*max_range*np.mgrid[-1:2:2, -1:2:2, -1:2:2][2].flatten() + 0.5 * (zlim[1] + zlim[0])
-# Comment or uncomment following both lines to test the fake bounding box:
-for xb, yb, zb in zip(Xb, Yb, Zb):
-    ax.plot([xb], [yb], [zb], 'w')
+
 ax.set_xlabel('x')
 ax.set_ylabel('y')
 ax.set_zlabel('z')
-
+set_axes_equal(ax)
 plt.show()

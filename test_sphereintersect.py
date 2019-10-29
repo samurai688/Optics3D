@@ -8,7 +8,8 @@ Created on Sat Dec  8 23:47:35 2018
 
 import pytest
 import numpy as np
-from optics3d import Ray, Sphere, intersectSphere
+from optics3d import Ray
+from Shapes.shapes import Sphere, intersectSphere
 
 two_hit_rays = [
     Ray(np.array([0, 0, 0]), np.array([0, 1, 0]), wavelength=532, print_trajectory=False),

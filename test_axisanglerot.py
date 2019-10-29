@@ -8,7 +8,7 @@ Created on Sat Dec  8 23:47:35 2018
 
 import pytest
 import numpy as np
-from optics3d import rotation_matrix_axis_angle
+from general_optics import rotation_matrix_axis_angle
 
 r_in_list = [
     np.array([0, 1, 0]),
