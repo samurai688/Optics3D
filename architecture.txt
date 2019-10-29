@@ -1,0 +1,35 @@
+okay, how is this whole thing going to work
+
+
+what we want to have is approximately
+
+a 3D world / domain with an index of refraction (assume 1)
+the user can position "optics" in that world
+    each optic may define one or more regions with different indices of refraction
+    each optic may define surfaces that absorb, diffusely reflect, spectrally disperse, etc
+the user can initialize light rays from a location in the world however they want
+    the rays are traced until
+        they reach a pre-set maximum travel distance
+        they are absorbed
+        they leave the world
+    when a light ray encounters an optic
+        the intersection pt
+        the optic surface normal
+        the new state of the ray based on the nature of the interaction (it gets refracted, reflected, absorbed, etc)
+the user can put detectors in the world with whatever properties
+
+
+
+
+
+
+
+
+
+there will be a tree of classes for various 2d and 3d geometry primitive shapes
+
+there will be a tree of classes for different optics
+
+there will be a ray class
+
+there will be a detector class
