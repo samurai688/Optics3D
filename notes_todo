@@ -1,0 +1,61 @@
+10/27/2019
+
+    going through and refactoring on new laptop with pycharm, converting tests to pytest
+    various things need plt.show() in pycharm
+    I expanded the ray-sphere intersections to be more complete, may cause issues
+    the whole structure is still taking shape and probably in need of some refactors
+    czerny and test still work at least
+
+    have done (pytestifying):
+      sphere intersect
+      rectangle intersect
+      project onto plane
+
+    still need to do (pytestifying):
+      concave mirror
+      axis angle rot
+      angle between
+
+    moved a copy of general.py over cause pycharm wasn't seeing it and added some stuff, should do something about that
+    one thing i added to general.py was a nice bounding box equal axis thing
+    need to implement source control
+
+
+
+10/28/2019
+
+    finished pytestifying, without going super deep on making new and exhaustive tests
+    cool
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
