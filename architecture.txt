@@ -23,9 +23,6 @@ the user can put detectors in the world with whatever properties
 
 
 
-
-
-
 there will be a tree of classes for various 2d and 3d geometry primitive shapes
 
 there will be a tree of classes for different optics
@@ -33,3 +30,27 @@ there will be a tree of classes for different optics
 there will be a ray class
 
 there will be a detector class
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

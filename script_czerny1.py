@@ -8,7 +8,7 @@ Created on Mon Dec  10 01:32:18 2018
 
 import numpy as np
 from general import wavelength_to_rgb
-from optics3d import Ray, Grating, Mirror, Detector, rotation_matrix_axis_angle
+from optics3d import Ray, Grating, Mirror, Detector
 import matplotlib.pyplot as plt
 from general import set_axes_equal
 plt.close("all")
@@ -100,7 +100,6 @@ for datarow in detector1.hit_data:
     plt.plot(datarow[0], datarow[2], 'o', markersize=2, color=wavelength_to_rgb(datarow[3]))
 plt.xlim(detector_center[0] - detector_w/2, detector_center[0] + detector_w/2)
 plt.ylim(detector_center[2] - detector_h/2, detector_center[2] + detector_h/2)
-#plt.axis("equal")
 plt.xlabel("x (mm)")
 plt.ylabel("z (mm)")
 

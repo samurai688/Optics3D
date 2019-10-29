@@ -8,10 +8,8 @@ Created on Sat Dec  8 23:10:35 2018
 
 import numpy as np
 from general import to_precision
-from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d import art3d
-from mpl_toolkits.mplot3d import proj3d
 from matplotlib.patches import Circle as mplCircle
 from matplotlib.patches import Rectangle as mplRectangle
 
