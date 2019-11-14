@@ -12,7 +12,10 @@ the user can initialize light rays from a location in the world however they wan
         they reach a pre-set maximum travel distance
         they are absorbed
         they leave the world
-    when a light ray encounters an optic
+            you could optionally have like fancy stuff where they track how much attenuation etc along a path
+            and even try to have a way to build up diffuse reflections and stuff by either branching or randomness
+    when a light ray encounters an optic surface
+        so it transitions from one index region to a new one
         the intersection pt
         the optic surface normal
         the new state of the ray based on the nature of the interaction (it gets refracted, reflected, absorbed, etc)

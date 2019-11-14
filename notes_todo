@@ -31,6 +31,73 @@
 
 
 
+11/03/2019
+
+    how do we even start eating this elephant
+    I guess I need to read through the code so far and try to figure out where it is currently
+    okay I think we have most of the vector rules for the ray tracing, if we could define the optic objects
+    if we could define objects properly and have the light be able to figure out what to do on hitting them
+    that's the main issue now
+    so
+    let's go read some about CAD software and the boolean model of building objects, or whatever
+    "constructive solid geometry"
+    represent stuff as a "BSP tree" -- this seems mostly for solving performance issues in games with complex scenes
+    let's just plan to use whatever representation is easy to understand and use
+    there is a pycsg library, but it uses polygons, which I'd rather stay away from for now
+    so what we want is, some sort of tree, with primitives and booleans on those primitives, that you can ray trace
+    so I need to understand more about what that will look like
+    primitives: = leaf nodes of tree
+        sphere, cube, cylinder, conde
+    boolean operators: = intermediate nodes of tree
+        union, intersection, difference
+
+    ray into union:
+        ray hits at first intersection.
+        example:
+            min(tA_min, tB_min)
+    ray into intersection:
+        ray hits at first time in A and in B.
+        example:
+            If ((tA_min < tB_min ) and (tA_max > tB_min ) ): tB_min
+            Else If ((tB_min< tA_min ) and (tB_max> tA_min ) ): tA_min
+            Else: none
+    ray into difference:
+        ray hits at first time in B not in A.
+        example:
+            If ((tB_min < tA_min ): tB_min
+            Else if (tA_max < tB_max ): tA_max
+            Else: none
+    ray into other difference:
+        ray hits at first time in A not in B.
+        example:
+            If ((tA_min < tB_min): tA_min
+            Else if (tB_max < tA_max ): tB_max
+            Else: none
+
+
+    there is something called a span that we can think of unions and stuff of
+    normals of csg intersections:
+        normal of union or intersection:
+            positive normal of intersected surface
+        normal of difference:
+            if tmin of positive object – normal of surface
+            if tmax of negative object – negated normal of surface
+
+
+    you could allow transformations in the tree but I'm going to ignore that for now
+
+
+    To ray trace a CSG tree, the tree must be traversed in a depth-first manner starting at the terminal nodes.
+    At the terminal nodes the intersection of the ray with each primitive.
+    The list of ray segments that pass through the solid object must be passed back up the tree.
+    Each list of ray segments will either contain either
+        - an odd number of intersection points,
+        - an even number of intersection points,
+        - empty list of intersection points.
+    An odd number of intersection points indicates that the viewpoint is inside the solid object.
+    an even number of intersection points indicates that the viewpoint is outside the solid object.
+
+    there are regularization issues if e.g. two cubes share a face and they are union'ed.  Let's ignore for now.
 
 
 
