@@ -75,7 +75,8 @@
             Else: none
 
 
-    there is something called a span that we can think of unions and stuff of
+    there is something called a span that we can think of unions and stuff as
+
     normals of csg intersections:
         normal of union or intersection:
             positive normal of intersected surface
@@ -83,11 +84,12 @@
             if tmin of positive object – normal of surface
             if tmax of negative object – negated normal of surface
 
-
     you could allow transformations in the tree but I'm going to ignore that for now
 
-
     To ray trace a CSG tree, the tree must be traversed in a depth-first manner starting at the terminal nodes.
+        a method that seems right might be
+        PostOrder traversal - visit left child, then the right child and then the parent;
+        probably some recursive algorithm needed here, gee I hope there's a class I can use built in
     At the terminal nodes the intersection of the ray with each primitive.
     The list of ray segments that pass through the solid object must be passed back up the tree.
     Each list of ray segments will either contain either
