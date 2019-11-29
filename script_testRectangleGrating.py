@@ -25,7 +25,7 @@ littrow_angle_700nm = np.arcsin(G / 1e6 * 1 * 700 / 2)
 RM = rotation_matrix_axis_angle(grating_tangent, littrow_angle_700nm)
 grating_normal = RM.dot(grating_normal)
 
-grating1 = Grating(grating_center, grating_normal, shape="rectangular_flat",
+grating1 = Grating(grating_center, normal=grating_normal, shape="rectangular_flat",
                   tangent=grating_tangent, h=50, w=50, G=G)
 
 

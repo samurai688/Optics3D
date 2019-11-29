@@ -17,7 +17,7 @@ mir_center = np.array([0, 0, 0])
 mir_normal = np.array([0.5, 1, 0.5])
 mir_tangent = np.array([1, -1, 1])
 
-mirror1 = Mirror(mir_center, mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=1, w=1)
+mirror1 = Mirror(mir_center, normal=mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=1, w=1)
 Optic_list = []
 Optic_list.append(mirror1)
 
@@ -51,7 +51,7 @@ Wd = diff_extent[2]
 # 3d plots
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-ax.set_aspect('equal')
+#ax.set_aspect('equal')
 for optic in Optic_list:
     optic.draw(ax, view="3d")
 ax.quiver(X, Y, Z, U, V, W, color="black")

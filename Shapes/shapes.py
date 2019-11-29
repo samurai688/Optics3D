@@ -21,51 +21,12 @@ def intersectPlane(ray, plane):
             return True, intersection_pt
     return False, None
 
-
 def intersectDisc(ray, disc):
     intersect, intersection_pt = intersectPlane(ray, disc.plane)
     if intersect:
         if distance_between(intersection_pt, disc.center) < disc.R:
             return True, intersection_pt
     return False, None
-
-
-def intersectSphere(ray, sphere):
-    # adapted from https://github.com/phire/Python-Ray-tracer/blob/master/sphere.py
-    # Dec 9 2018
-    q = sphere.center - ray.position
-    vDotQ = np.dot(ray.direction, q)
-    squareDiffs = np.dot(q, q) - sphere.R * sphere.R
-    discrim = vDotQ * vDotQ - squareDiffs
-    if discrim > 0: # line intersects in two points
-        root = np.sqrt(discrim)
-        t0 = (vDotQ - root)
-        t1 = (vDotQ + root)
-        pt0 = ray.position + t0 * ray.direction
-        pt1 = ray.position + t1 * ray.direction
-        # If both t are positive, ray is facing the sphere and intersecting
-        # If one t is positive one t is negative, ray is shooting from inside
-        # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
-        # So we have to return the smaller and positive t as the intersecting distance for the ray
-        if t0 > 0 and t1 > 0:
-            if t0 < t1:
-                return True, pt1, pt0
-            else:
-                return True, pt0, pt1
-        elif t0 < 0 and t1 > 0:
-            return True, pt1, None
-        elif t0 > 0 and t1 < 0:
-            return True, pt0, None
-        else:
-            return False, None, None
-    elif discrim == 0:  # line intersects in one point, tangent
-        t0 = vDotQ
-        pt0 = ray.position + t0 * ray.direction
-        return True, pt0, None
-
-    else:  # discrim < 0   # line does not intersect
-        return False, None, None
-
 
 def intersectRectangle(ray, rectangle):
     # https://stackoverflow.com/questions/2752725/finding-whether-a-point-lies-inside-a-rectangle-or-not
@@ -85,7 +46,6 @@ def intersectRectangle(ray, rectangle):
             if 0 <= np.dot(BC, BM) <= np.dot(BC, BC):
                 return True, intersection_pt
     return False, None
-
 
 def check_R_and_D(R, D):
     if R is None:
@@ -170,15 +130,48 @@ class Sphere(Shape):
         self.R = R
         self.D = D
 
-    def test_intersect(self, ray):
-        return intersectSphere(ray, self)
-
     def normal(self, p):
         """The surface normal at the given point on the sphere, pointing toward the center"""
         return unit_vector(self.center - p)
 
     def __repr__(self):
         return (f"<Sphere, center={self.center}, R={self.R}>")
+
+    def test_intersect(self, ray):
+        # adapted from https://github.com/phire/Python-Ray-tracer/blob/master/sphere.py
+        # Dec 9 2018
+        q = self.center - ray.position
+        vDotQ = np.dot(ray.direction, q)
+        squareDiffs = np.dot(q, q) - self.R * self.R
+        discrim = vDotQ * vDotQ - squareDiffs
+        if discrim > 0:  # line intersects in two points
+            root = np.sqrt(discrim)
+            t0 = (vDotQ - root)
+            t1 = (vDotQ + root)
+            pt0 = ray.position + t0 * ray.direction
+            pt1 = ray.position + t1 * ray.direction
+            # If both t are positive, ray is facing the sphere and intersecting
+            # If one t is positive one t is negative, ray is shooting from inside
+            # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
+            # So we have to return the smaller and positive t as the intersecting distance for the ray
+            if t0 > 0 and t1 > 0:
+                if t0 < t1:
+                    return True, pt1, pt0
+                else:
+                    return True, pt0, pt1
+            elif t0 < 0 and t1 > 0:
+                return True, pt1, None
+            elif t0 > 0 and t1 < 0:
+                return True, pt0, None
+            else:
+                return False, None, None
+        elif discrim == 0:  # line intersects in one point, tangent
+            t0 = vDotQ
+            pt0 = ray.position + t0 * ray.direction
+            return True, pt0, None
+
+        else:  # discrim < 0   # line does not intersect
+            return False, None, None
 
 
 class Rectangle(Shape):

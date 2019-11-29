@@ -41,10 +41,9 @@ class Optic:
 
 
 class Mirror(Optic):
-    def __init__(self, position, normal, shape="circular_flat", D=None, w=None, h=None,
+    def __init__(self, position, shape="circular_flat", normal=None, D=None, w=None, h=None,
                  thickness=10, f=None, tangent=None):
         self.position = position
-        self.normal = unit_vector(normal)
         self.shape = shape
         self.D = D
         self.w = w
@@ -53,14 +52,19 @@ class Mirror(Optic):
         self.f = f
         self.surfaces = []
         if shape == "circular_flat":
+            self.normal = unit_vector(normal)
             self.surfaces.append(Disc(position, normal, D=D))
         elif shape == "rectangular_flat":
+            self.normal = unit_vector(normal)
             self.surfaces.append(Rectangle(position, normal, tangent, h=h, w=w))
         elif shape == "circular_concave_spherical":
+            self.normal = unit_vector(normal)
             self.rc = self.f * 2
             self.p_rc = self.position + self.normal * self.rc
             self.surfaces.append(Disc(position, normal, D=D))
             self.surfaces.append(Sphere(center=self.p_rc, R=self.rc))
+        elif shape == "circular_convex_spherical":
+            self.surfaces.append(Sphere(center=self.position, D=self.D))
         else:
             raise ValueError("Unknown shape")
 
@@ -108,6 +112,23 @@ class Mirror(Optic):
                             intersection_pt = int_pt_sphere2
                     else:
                         intersection_pt = int_pt_sphere1
+        elif self.shape == "circular_convex_spherical":
+            for surface in self.surfaces:
+                if isinstance(surface, Sphere):  # first check for intersection with the sphere
+                    intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
+                if intersected_sphere:
+                    intersected = True
+                    distance_to_surface = distance_between(ray.position, int_pt_sphere1)
+                    if distance_to_surface < min_distance:
+                        min_distance = distance_to_surface
+                        intersection_pt = int_pt_sphere1
+                    if int_pt_sphere2 is not None:
+                        distance_to_surface = distance_between(ray.position, int_pt_sphere2)
+                        if distance_to_surface < min_distance:
+                            min_distance = distance_to_surface
+                            intersection_pt = int_pt_sphere2
+        else:
+            raise ValueError("unknown shape")
         return intersected, intersection_pt
 
 
@@ -165,6 +186,15 @@ class Mirror(Optic):
 #                ln, = ax.plot(self.p_rc[0], self.p_rc[1], self.p_rc[2], 'ob')
                 # return the Artist created
                 return None
+            elif self.shape == "circular_convex_spherical":
+                N = 50
+                stride = 2
+                u = np.linspace(0, 2 * np.pi, N)
+                v = np.linspace(0, np.pi, N)
+                x = self.position[0] + self.D / 2 * np.outer(np.cos(u), np.sin(v))
+                y = self.position[1] + self.D / 2 * np.outer(np.sin(u), np.sin(v))
+                z = self.position[2] + self.D / 2 * np.outer(np.ones(np.size(u)), np.cos(v))
+                ax.plot_surface(x, y, z, linewidth=1.0, cstride=stride, rstride=stride)
             else:
                 raise ValueError("unknown shape")
 
@@ -533,6 +563,14 @@ class Ray:
                         for surface in intersected_optic.surfaces:
                             if isinstance(surface, Sphere):
                                 normal = surface.normal(intersection_pt)
+                                break
+                        self.reflect(reflect_type="specular_flat",
+                                     normal=normal,
+                                     intersection_pt=intersection_pt)
+                    elif intersected_optic.shape == "circular_convex_spherical":
+                        for surface in intersected_optic.surfaces:
+                            if isinstance(surface, Sphere):
+                                normal = -surface.normal(intersection_pt)
                                 break
                         self.reflect(reflect_type="specular_flat",
                                      normal=normal,

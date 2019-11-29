@@ -113,8 +113,9 @@
         okay let's work toward this so we can populate a tree with this stuff
         okay we can! yay
         I guess it would be cool if the operations could detect if they overlap or not and throw errors
-
-
+    alright now let's work toward tracing a scene with several reflective sphere's in it
+        do a single reflective sphere: check
+        
 
 
 

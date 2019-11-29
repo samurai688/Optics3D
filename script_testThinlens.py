@@ -16,7 +16,7 @@ lens_center = np.array([0, 50, 0])
 lens_normal = np.array([0, -1, 0])
 lens_tangent = np.array([0, 0, 1])
 
-lens1 = Lens(lens_center, lens_normal, shape="spherical_biconvex",
+lens1 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
              tangent=lens_tangent, D=50, thinlens=True, f=100)
 Optic_list = []
 Optic_list.append(lens1)

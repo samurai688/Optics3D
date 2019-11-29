@@ -16,7 +16,7 @@ mir_center = np.array([0, 50, 0])
 mir_normal = np.array([0.1, -1, 0])
 mir_tangent = np.array([0, 0, 1])
 
-mirror1 = Mirror(mir_center, mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=50, w=50)
+mirror1 = Mirror(mir_center, normal=mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=50, w=50)
 Optic_list = []
 Optic_list.append(mirror1)
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Sat Dec  8 23:47:35 2018
+Created on Sat Dec  29
 
 @author: samuel
 """
@@ -22,13 +22,14 @@ mirror1_normal = np.array([0, -1, 0])
 ray1_pos = np.array([0, 0, 0])
 ray1_direction = np.array([0, 1, 0])
 
-mirror1 = Mirror(mirror1_pos, normal=mirror1_normal, shape="circular_concave_spherical", D=50, f=50)
+mirror1 = Mirror(mirror1_pos, normal=mirror1_normal, shape="circular_convex_spherical", D=50, f=50)
 Optic_list = []
 Optic_list.append(mirror1)
 
+
 Ray_list = []
 ray_z = np.linspace(-24, 24, 25)
-ray_x = np.linspace(0, 0, 1)
+ray_x = np.linspace(-24, 24, 3)
 for x_ix, x_val in enumerate(ray_x):
     for z_ix, z_val in enumerate(ray_z):
         ray_pos = np.array([x_val, 0, z_val])
@@ -47,11 +48,11 @@ fig = plt.figure()
 ax = plt.axes(projection='3d')
 # ax.set_aspect('equal')
 
-for optic in Optic_list:
-    optic.draw(ax, view="3d")
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
     ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+for optic in Optic_list:
+    optic.draw(ax, view="3d")
 
 ax.set_xlabel('x')
 ax.set_ylabel('y')
@@ -59,12 +60,3 @@ ax.set_zlabel('z')
 
 set_axes_equal(ax)
 plt.show()
-
-
-
-
-
-
-
-
-

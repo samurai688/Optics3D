@@ -18,21 +18,21 @@ mirror1_center = np.array([0, 150, 0])
 mirror1_normal = np.array([0.25, -1, 0])
 mirror1_f = 150
 mirror1_D = 50.8
-mirror1 = Mirror(mirror1_center, mirror1_normal, shape="circular_concave_spherical",
+mirror1 = Mirror(mirror1_center, normal=mirror1_normal, shape="circular_concave_spherical",
                   f=mirror1_f, D=mirror1_D)
 
 grating_center = np.array([55, 50, 0])
 grating_normal = np.array([0, 1, 0])
 grating_tangent = np.array([0, 0, 1])
 grating_G = 300
-grating1 = Grating(grating_center, grating_normal, shape="rectangular_flat",
+grating1 = Grating(grating_center, normal=grating_normal, shape="rectangular_flat",
                   tangent=grating_tangent, h=50, w=50, G=grating_G)
 
 mirror2_center = np.array([120, 137.5, 0])
 mirror2_normal = np.array([-0.35, -1, 0])
 mirror2_f = 150
 mirror2_D = 50.8
-mirror2 = Mirror(mirror2_center, mirror2_normal, shape="circular_concave_spherical",
+mirror2 = Mirror(mirror2_center, normal=mirror2_normal, shape="circular_concave_spherical",
                   f=mirror2_f, D=mirror2_D)
 
 detector_center = np.array([119, 0, 0])
@@ -40,7 +40,7 @@ detector_normal = np.array([0, 1, 0])
 detector_tangent = np.array([0, 0, 1])
 detector_h = 25
 detector_w = 25
-detector1 = Detector(detector_center, detector_normal, shape="rectangular_flat",
+detector1 = Detector(detector_center, normal=detector_normal, shape="rectangular_flat",
                      tangent=detector_tangent, h=detector_h, w=detector_w)
 
 
