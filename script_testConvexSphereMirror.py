@@ -12,24 +12,32 @@ import matplotlib.pyplot as plt
 from general import set_axes_equal
 plt.close("all")
 
-max_ray_run_distance = 150 # mm
+max_ray_run_distance = 400 # mm
 
 
 
 mirror1_pos = np.array([0, 50, 0])
-mirror1_normal = np.array([0, -1, 0])
+mirror2_pos = np.array([0, -50, 50])
+mirror3_pos = np.array([0, 50, 50])
+mirror4_pos = np.array([0, -50, 100])
 
 ray1_pos = np.array([0, 0, 0])
 ray1_direction = np.array([0, 1, 0])
 
-mirror1 = Mirror(mirror1_pos, normal=mirror1_normal, shape="circular_convex_spherical", D=50, f=50)
+mirror1 = Mirror(mirror1_pos, shape="circular_convex_spherical", D=25)
+mirror2 = Mirror(mirror2_pos, shape="circular_convex_spherical", D=25)
+mirror3 = Mirror(mirror3_pos, shape="circular_convex_spherical", D=25)
+mirror4 = Mirror(mirror4_pos, shape="circular_convex_spherical", D=25)
 Optic_list = []
 Optic_list.append(mirror1)
+Optic_list.append(mirror2)
+Optic_list.append(mirror3)
+Optic_list.append(mirror4)
 
 
 Ray_list = []
-ray_z = np.linspace(-24, 24, 25)
-ray_x = np.linspace(-24, 24, 3)
+ray_z = np.linspace(3.2485, 3.2485, 1)
+ray_x = np.linspace(0, 0, 1)
 for x_ix, x_val in enumerate(ray_x):
     for z_ix, z_val in enumerate(ray_z):
         ray_pos = np.array([x_val, 0, z_val])

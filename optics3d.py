@@ -19,7 +19,7 @@ from Shapes.shapes import Rectangle, Disc, Sphere
 
 
 
-
+INTERSECT_CLIPPING_FLOOR = 1e-12
 
 
 
@@ -536,12 +536,14 @@ class Ray:
                     continue
                 intersected_here, pt = self.test_intersect(optic, distance_remaining)
                 if intersected_here:
-                    intersected = True
                     distance_to_optic = distance_between(self.position, pt)
-                    if distance_to_optic < min_distance:
-                        min_distance = distance_to_optic
-                        intersected_optic = optic
-                        intersection_pt = pt
+                    print(distance_to_optic)
+                    if distance_to_optic > INTERSECT_CLIPPING_FLOOR:
+                        intersected = True
+                        if distance_to_optic < min_distance:
+                            min_distance = distance_to_optic
+                            intersected_optic = optic
+                            intersection_pt = pt
             if not intersected:
                 if self.print_trajectory:
                     print("not intersected (messages TODO)")
