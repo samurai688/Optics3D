@@ -178,7 +178,7 @@ class Sphere(Shape):
         return unit_vector(self.center - p)
 
     def __repr__(self):
-        return (f"Sphere, center={self.center}, R={self.R}")
+        return (f"<Sphere, center={self.center}, R={self.R}>")
 
 
 class Rectangle(Shape):

@@ -101,6 +101,18 @@
 
     there are regularization issues if e.g. two cubes share a face and they are union'ed.  Let's ignore for now.
 
+11/29/2019
+
+    we made a basic tree class and we can traverse it
+    right now it does addition and subtraction operators etc but we can make that whatever
+    so what are the steps to make progress:
+        the leaf nodes need to be able to have geometry primitives as their "value"
+        the internal nodes need to be able to have boolean csg operations as their "value"
+            we need a set of functions that are these boolean csg operations
+            I don't know if they have to do anything other than be identifiable by the ray traverse routine
+        okay let's work toward this so we can populate a tree with this stuff
+        okay we can! yay
+        I guess it would be cool if the operations could detect if they overlap or not and throw errors
 
 
 

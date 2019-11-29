@@ -10,8 +10,6 @@ import operator
 from mpl_toolkits.mplot3d import art3d
 
 
-
-
 def unit_vector(vector):
     """ Returns the unit vector of the vector.  """
     return vector / np.linalg.norm(vector)
@@ -132,20 +130,10 @@ def pathpatch_translate(pathpatch, delta):
 ######
 
 
-
-
-
-
 def project_onto_plane(x, n):
     d = np.dot(x, n) / np.linalg.norm(n)
     p = [d * unit_vector(n)[i] for i in range(len(n))]
     return np.array([x[i] - p[i] for i in range(len(x))])
-
-
-
-
-
-
 
 
 class BinaryTree:
@@ -184,9 +172,9 @@ class BinaryTree:
         return self.key
 
 
-
+# only works if the tree is constructed how we expect
 def postOrderEval(tree):
-    opers = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
+    opers = {'union': operCsgUnion, 'difference': operCsgDifference, 'intersect': operCsgIntersect}
     res1 = None
     res2 = None
     if tree:
@@ -196,3 +184,13 @@ def postOrderEval(tree):
             return opers[tree.getRootVal()](res1, res2)
         else:
             return tree.getRootVal()
+
+
+def operCsgUnion(tree1, tree2):
+    return "( " + str(tree1) + " u " + str(tree2) + " )"
+
+def operCsgIntersect(tree1, tree2):
+    return "( " + str(tree1) + " n " + str(tree2) + " )"
+
+def operCsgDifference(tree1, tree2):
+    return "( " + str(tree1)  + " \ " + str(tree2) + " )"

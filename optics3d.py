@@ -259,8 +259,6 @@ class Lens(Optic):
         return intersected, intersection_pt
 
 
-
-
 class Grating(Optic):
     def __init__(self, position, normal, tangent, shape="rectangular_flat", w=None, h=None, G=None,
                  order=None):
@@ -371,7 +369,6 @@ class Detector(Optic):
                         ax.add_collection3d(Poly3DCollection(verts, facecolor='gray', edgecolor='black'), zs=z)
                 return None
 
-        
 
 class Annotation(Optic):
     pass
@@ -414,7 +411,6 @@ class Ray:
     def get_plot_repr(self):
         """Get the trajectory data of the ray for plotting"""
         return np.array(self.point_history)
-
 
     def fly(self, distance=None):
         """Fly a ray through space in a straight line."""
@@ -488,9 +484,6 @@ class Ray:
         """
         intersected, intersection_pt = optic.test_intersect(self)  # self is the ray
         return intersected, intersection_pt
-
-
-
 
     def run(self, max_distance, optic_list=[], max_interactions=np.inf):
         """
