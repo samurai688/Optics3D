@@ -546,12 +546,14 @@ class Ray:
                     continue
                 elif isinstance(optic, Window):
                     continue
-                intersected_here, int_pt, normal = optic.test_intersect(self)  # TODO what if distance remaining is too short?
+                intersected_here, int_pt, normal = optic.test_intersect(self)
                 if intersected_here:
                     distance_to_optic = distance_between(self.position, int_pt)
-                    if distance_to_optic > INTERSECT_CLIPPING_FLOOR:
-                        intersected = True
-                        if distance_to_optic < min_distance:
+                    if distance_to_optic > distance_remaining:
+                        pass  # allow intersected to remain False, pass through to fly distance_remaining
+                    elif distance_to_optic > INTERSECT_CLIPPING_FLOOR:
+                        intersected = True  # hit
+                        if distance_to_optic < min_distance:  # intersect the nearest optic
                             min_distance = distance_to_optic
                             intersected_optic = optic
                             intersection_pt = int_pt
