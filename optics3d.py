@@ -553,7 +553,7 @@ class Ray:
                         pass  # allow intersected to remain False, pass through to fly distance_remaining
                     elif distance_to_optic > INTERSECT_CLIPPING_FLOOR:
                         intersected = True  # hit
-                        if distance_to_optic < min_distance:  # intersect the nearest optic
+                        if distance_to_optic < min_distance:  # set intersect the nearest optic
                             min_distance = distance_to_optic
                             intersected_optic = optic
                             intersection_pt = int_pt
