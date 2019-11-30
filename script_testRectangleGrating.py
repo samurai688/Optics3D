@@ -74,7 +74,7 @@ for ray in Ray_list:
 # 3d plots
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-ax.set_aspect('equal')
+# ax.set_aspect('equal')
 for optic in Optic_list:
     optic.draw(ax, view="3d")
 for ray in Ray_list:

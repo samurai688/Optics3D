@@ -101,7 +101,7 @@ class Mirror(Optic):
         min_distance = np.inf
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
             for surface in self.surfaces:  # for now this is just the one disc or rectangle
-                intersected_here, int_pt = surface.test_intersect(ray)
+                intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True
                     distance_to_surface = distance_between(ray.position, int_pt)
@@ -113,7 +113,7 @@ class Mirror(Optic):
             normal = None # TODO
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
-                    intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
+                    intersected_sphere, int_pt_sphere1, int_pt_sphere2, norm1, norm2 = surface.test_intersect(ray)
                     break
             if intersected_sphere:
                 for surface in self.surfaces:
@@ -136,7 +136,7 @@ class Mirror(Optic):
             normal = None
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
-                    intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
+                    intersected_sphere, int_pt_sphere1, int_pt_sphere2, norm1, norm2 = surface.test_intersect(ray)
                 if intersected_sphere:
                     intersected = True
                     distance_to_surface = distance_between(ray.position, int_pt_sphere1)

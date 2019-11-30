@@ -212,7 +212,7 @@ def operCsgUnion(resA, resB, ray):
     # UNION: min(tA_min, tB_min)
     intersected = False
     if resA[0] and resB[0]:
-        print("hi 1")
+        # print("hi 1")
         intersected = True
         normB = None
         normA = None
@@ -265,8 +265,7 @@ def operCsgUnion(resA, resB, ray):
         return intersected, intersection_point, None, normal, None
 
     elif resA[0]:
-        print("hi 2")
-        print(resA)
+        # print("hi 2")
         if (resA[1] is not None) and (resA[2] is not None):
             distanceA1 = distance_between(ray.position, resA[1])
             distanceA2 = distance_between(ray.position, resA[2])
@@ -281,7 +280,7 @@ def operCsgUnion(resA, resB, ray):
             normA = resA[3]
         else:
             pointA = None
-        print(pointA)
+        # print(pointA)
         return True, pointA, None, normA, None
 
     elif resB[0]:
@@ -299,11 +298,11 @@ def operCsgUnion(resA, resB, ray):
             normB = resB[3]
         else:
             pointB = None
-        print(pointB)
+        # print(pointB)
         return True, pointB, None, normB, None
 
     else:
-        print("hi 4")
+        # print("hi 4")
         return False, None, None, None, None
 
 

@@ -195,7 +195,8 @@ class Rectangle(Shape):
         self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
-        return intersectRectangle(ray, self)
+        intersected, int_pt = intersectRectangle(ray, self)
+        return intersected, int_pt, self.normal
 
     def __repr__(self):
         return (
