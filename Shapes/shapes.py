@@ -21,12 +21,6 @@ def intersectPlane(ray, plane):
             return True, intersection_pt
     return False, None
 
-def intersectDisc(ray, disc):
-    intersect, intersection_pt = intersectPlane(ray, disc.plane)
-    if intersect:
-        if distance_between(intersection_pt, disc.center) < disc.R:
-            return True, intersection_pt
-    return False, None
 
 def intersectRectangle(ray, rectangle):
     # https://stackoverflow.com/questions/2752725/finding-whether-a-point-lies-inside-a-rectangle-or-not
@@ -92,7 +86,20 @@ class Plane(Shape):
         self.normal = unit_vector(normal)
 
     def __repr__(self):
-        return (f"Circle, center={self.center}, R={self.R}")
+        return (f"Plane, center={self.center}, normal={self.normal}")
+
+    def test_intersect(self, ray):
+        denominator = np.dot(unit_vector(self.normal), unit_vector(ray.direction))
+        #  ARB_EPSILON_VALUE is an arbitrary epsilon value. We just want
+        #  to avoid working with intersections that are almost orthogonal.
+        ARB_EPSILON_VALUE = 1e-8
+        if np.abs(denominator) > ARB_EPSILON_VALUE:
+            difference = self.center - ray.position
+            t = np.dot(difference, self.normal) / denominator
+            if t > ARB_EPSILON_VALUE:
+                intersection_pt = ray.position + t * ray.direction
+                return True, intersection_pt, self.normal
+        return False, None, None
 
 
 class Circle(Shape):
@@ -117,8 +124,11 @@ class Disc(Circle):
         self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
-        intersected, int_pt = intersectDisc(ray, self)
-        return intersected, int_pt, self.normal
+        intersected, intersection_pt, normal = intersectPlane(ray, self.plane)
+        if intersected:
+            if distance_between(intersection_pt, self.center) < self.R:
+                return True, intersection_pt, normal
+        return False, None, None
 
     def __repr__(self):
         return (f"Disc, center={self.center}, R={self.R}, normal={self.normal}")
