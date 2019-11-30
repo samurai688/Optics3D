@@ -130,6 +130,17 @@
             only union is implemented
             general refactoring needed
 
+    11/30/19
+
+        before we implement the more challenging boolean stuff, we need to clean up a bit
+        right now the architecture is a bit weird because, we rely on the optic to test for intersect, but then the ray
+        has to figure out how to refract or reflect etc, based on the type of optic it's hitting. and there's a lot of
+        awkwardness in determining the intersection point and normal. So let's complete the switch, so that the optic
+        does everything in one go, figures out intersect point, normal, and behavior, and passes it back to the ray.
+        other refactor issues:
+            need to move intersectDisc etc functions in shapes.py into the respective classes
+            the script_tests need to be consolidated and put into a testing framework
+
 
 
 

@@ -13,7 +13,7 @@ from general import set_axes_equal
 plt.close("all")
 
 
-max_ray_run_distance = 200 # mm
+max_ray_run_distance = 20 # mm
 
 mirror1_pos = np.array([0, 100, 0])
 mirror1_normal = np.array([0, -1, 0])
@@ -24,7 +24,7 @@ ray2_pos = np.array([-100, 0, 0])
 ray2_direction = np.array([1, 0.8, 0])
 
 Optic_list = []
-Optic_list.append(Mirror(mirror1_pos, mirror1_normal, shape="circular_flat", D=50))
+Optic_list.append(Mirror(mirror1_pos, normal=mirror1_normal, shape="circular_flat", D=50))
 
 Ray_list = []
 Ray_list.append(Ray(ray1_pos, ray1_direction, wavelength=532, print_trajectory=False))
@@ -53,7 +53,7 @@ for ray in Ray_list:
 # 3d plots
 fig = plt.figure()
 ax = plt.axes(projection='3d')
-ax.set_aspect('equal')
+# ax.set_aspect('equal')
 for optic in Optic_list:
     optic.draw(ax, view="3d")
 for ray in Ray_list:

@@ -117,7 +117,8 @@ class Disc(Circle):
         self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
-        return intersectDisc(ray, self)
+        intersected, int_pt = intersectDisc(ray, self)
+        return intersected, int_pt, self.normal
 
     def __repr__(self):
         return (f"Disc, center={self.center}, R={self.R}, normal={self.normal}")

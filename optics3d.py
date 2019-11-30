@@ -22,7 +22,6 @@ from Shapes.shapes import Rectangle, Disc, Sphere
 INTERSECT_CLIPPING_FLOOR = 1e-12
 
 
-
 class Optic:
     def __init__(self, position, normal, shape):
         self.position = position
@@ -40,7 +39,6 @@ class Optic:
                                                        to_precision(self.normal[2], 5)))
 
 
-
 class Compound(Optic):
     def __init__(self, tree):
         self.tree = tree;
@@ -54,8 +52,6 @@ class Compound(Optic):
 
     def draw(self, ax, view="3d"):
         pass
-
-
 
 
 class Mirror(Optic):
@@ -441,8 +437,6 @@ class Block(Optic):
     pass
 
 
-
-
 class Ray:
     def __init__(self, position, direction, wavelength=532, order=0, print_trajectory=False):
         self.position = position
@@ -533,13 +527,6 @@ class Ray:
         else:
             raise ValueError(f"Unknown reflect type {reflect_type}")
 
-    def test_intersect(self, optic, max_distance):
-        """
-        Test if the ray intersects a particular optic
-        """
-        intersected, intersection_pt, normal = optic.test_intersect(self)  # self is the ray
-        return intersected, intersection_pt, normal
-
     def run(self, max_distance, optic_list=[], max_interactions=np.inf):
         """
         Run the ray through an optical system
@@ -559,19 +546,15 @@ class Ray:
                     continue
                 elif isinstance(optic, Window):
                     continue
-                print("this call")
-                intersected_here, pt, normal = self.test_intersect(optic, distance_remaining)
-                print("this call is done")
-                print(f"normal = {normal}")
+                intersected_here, int_pt, normal = optic.test_intersect(self)  # TODO what if distance remaining is too short?
                 if intersected_here:
-                    distance_to_optic = distance_between(self.position, pt)
-                    # print(distance_to_optic)
+                    distance_to_optic = distance_between(self.position, int_pt)
                     if distance_to_optic > INTERSECT_CLIPPING_FLOOR:
                         intersected = True
                         if distance_to_optic < min_distance:
                             min_distance = distance_to_optic
                             intersected_optic = optic
-                            intersection_pt = pt
+                            intersection_pt = int_pt
             if not intersected:
                 if self.print_trajectory:
                     print("not intersected (messages TODO)")
