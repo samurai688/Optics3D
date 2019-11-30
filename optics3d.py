@@ -395,7 +395,7 @@ class Detector(Optic):
         min_distance = np.inf
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
             for surface in self.surfaces:  # for now this is just the one disc or rectangle
-                intersected_here, int_pt = surface.test_intersect(ray)
+                intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True
                     distance_to_surface = distance_between(ray.position, int_pt)
@@ -404,7 +404,7 @@ class Detector(Optic):
                         intersection_pt = int_pt
             if intersected:
                 self.hit_data.append(np.append(intersection_pt, ray.wavelength))
-        return intersected, intersection_pt, self.normal
+        return intersected, intersection_pt, normal
 
     def draw(self, ax, view="3d"):  # Detector
         """Um, somehow draw the optic"""
