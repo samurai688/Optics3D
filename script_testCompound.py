@@ -7,42 +7,42 @@ Created on Sat Dec  29
 """
 
 import numpy as np
-from optics3d import Ray, Mirror
+from optics3d import Ray, Compound
 import matplotlib.pyplot as plt
+from Shapes.shapes import Sphere
 from general import set_axes_equal
+from general_optics import BinaryTree
 plt.close("all")
 
-max_ray_run_distance = 400 # mm
+max_ray_run_distance = 150 # mm
 
 
 
 mirror1_pos = np.array([0, 50, 0])
-mirror2_pos = np.array([0, -50, 50])
-mirror3_pos = np.array([0, 50, 50])
-mirror4_pos = np.array([0, -50, 100])
+mirror2_pos = np.array([15, 50, 0])
 
 ray1_pos = np.array([0, 0, 0])
 ray1_direction = np.array([0, 1, 0])
 
-mirror1 = Mirror(mirror1_pos, shape="circular_convex_spherical", D=25)
-mirror2 = Mirror(mirror2_pos, shape="circular_convex_spherical", D=25)
-mirror3 = Mirror(mirror3_pos, shape="circular_convex_spherical", D=25)
-mirror4 = Mirror(mirror4_pos, shape="circular_convex_spherical", D=25)
+mirror1 = Sphere(mirror1_pos, D=25)
+mirror2 = Sphere(mirror2_pos, D=25)
+mirrorCOMPOUNDtree = BinaryTree("union")
+mirrorCOMPOUNDtree.insertLeft(mirror1)
+mirrorCOMPOUNDtree.insertRight(mirror2)
+mirrorCOMPOUND = Compound(mirrorCOMPOUNDtree)
 Optic_list = []
-Optic_list.append(mirror1)
-Optic_list.append(mirror2)
-Optic_list.append(mirror3)
-Optic_list.append(mirror4)
+Optic_list.append(mirrorCOMPOUND)
+
 
 
 Ray_list = []
-ray_z = np.linspace(3.2485, 3.2485, 1)
-ray_x = np.linspace(0, 0.01, 2)
+ray_z = np.linspace(0, 0, 1)
+ray_x = np.linspace(-25, 50, 76)
 for x_ix, x_val in enumerate(ray_x):
     for z_ix, z_val in enumerate(ray_z):
         ray_pos = np.array([x_val, 0, z_val])
         ray_dir = np.array([0, 1, 0])
-        ray = Ray(ray_pos, ray_dir, wavelength=532, print_trajectory=False)
+        ray = Ray(ray_pos, ray_dir, wavelength=532, print_trajectory=True)
         Ray_list.append(ray)
 
 

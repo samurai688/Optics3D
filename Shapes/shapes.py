@@ -150,28 +150,30 @@ class Sphere(Shape):
             t1 = (vDotQ + root)
             pt0 = ray.position + t0 * ray.direction
             pt1 = ray.position + t1 * ray.direction
+            norm0 = self.normal(pt0)
+            norm1 = self.normal(pt1)
             # If both t are positive, ray is facing the sphere and intersecting
             # If one t is positive one t is negative, ray is shooting from inside
             # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
             # So we have to return the smaller and positive t as the intersecting distance for the ray
             if t0 > 0 and t1 > 0:
                 if t0 < t1:
-                    return True, pt1, pt0
+                    return True, pt1, pt0, norm1, norm0
                 else:
-                    return True, pt0, pt1
+                    return True, pt0, pt1, norm0, norm1
             elif t0 < 0 and t1 > 0:
-                return True, pt1, None
+                return True, pt1, None, norm1, None
             elif t0 > 0 and t1 < 0:
-                return True, pt0, None
+                return True, pt0, None, norm0, None
             else:
-                return False, None, None
+                return False, None, None, None, None
         elif discrim == 0:  # line intersects in one point, tangent
             t0 = vDotQ
             pt0 = ray.position + t0 * ray.direction
-            return True, pt0, None
+            return True, pt0, None, norm0, None
 
         else:  # discrim < 0   # line does not intersect
-            return False, None, None
+            return False, None, None, None, None
 
 
 class Rectangle(Shape):

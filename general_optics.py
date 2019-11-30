@@ -173,7 +173,7 @@ class BinaryTree:
 
 # only works if the tree is constructed how we expect
 def postOrderEval(tree):
-    opers = {'union': operCsgUnion, 'difference': operCsgDifference, 'intersect': operCsgIntersect}
+    opers = {'union': printCsgUnion, 'difference': printCsgDifference, 'intersect': printCsgIntersect}
     res1 = None
     res2 = None
     if tree:
@@ -184,12 +184,132 @@ def postOrderEval(tree):
         else:
             return tree.getRootVal()
 
+def printCsgUnion(res1, res2):
+    return "( " + str(res1) + " u " + str(res2) + " )"
 
-def operCsgUnion(tree1, tree2):
-    return "( " + str(tree1) + " u " + str(tree2) + " )"
+def printCsgIntersect(res1, res2):
+    return "( " + str(res1) + " n " + str(res2) + " )"
 
-def operCsgIntersect(tree1, tree2):
+def printCsgDifference(res1, res2):
+    return "( " + str(res1)  + " \ " + str(res2) + " )"
+
+
+def test_tree_intersect(tree, ray):
+    opers = {'union': operCsgUnion, 'difference': operCsgDifference, 'intersect': operCsgIntersect}
+    res1 = None
+    res2 = None
+    if tree:
+        res1 = test_tree_intersect(tree.getLeftChild(), ray)
+        res2 = test_tree_intersect(tree.getRightChild(), ray)
+        if res1 and res2:
+            return opers[tree.getRootVal()](res1, res2, ray)
+        else:
+            return tree.getRootVal().test_intersect(ray)
+
+
+def operCsgUnion(resA, resB, ray):
+    # have two inputs of syntax e.g.  "False, None, None, None, None"  or  "True, int-pt1, int-pt2, norm1, norm2"
+    # UNION: min(tA_min, tB_min)
+    intersected = False
+    if resA[0] and resB[0]:
+        print("hi 1")
+        intersected = True
+        normB = None
+        normA = None
+        if (resA[1] is not None) and (resA[2] is not None):
+            distanceA1 = distance_between(ray.position, resA[1])
+            distanceA2 = distance_between(ray.position, resA[2])
+            if distanceA1 < distanceA2:
+                pointA = resA[1]
+                normA = resA[3]
+            else:
+                pointA = resA[2]
+                normA = resA[4]
+        elif (resA[1] is not None):
+            pointA = resA[1]
+            normA = resA[3]
+        else:
+            pointA = None
+
+        if (resB[1] is not None) and (resB[2] is not None):
+            distanceB1 = distance_between(ray.position, resB[1])
+            distanceB2 = distance_between(ray.position, resB[2])
+            if distanceB1 < distanceB2:
+                pointB = resB[1]
+                normB = resB[3]
+            else:
+                pointB = resB[2]
+                normB = resB[4]
+        elif (resB[1] is not None):
+            pointB = resB[1]
+            normB = resB[3]
+        else:
+            pointB = None
+
+        if (pointA is not None) and (pointB is not None):
+            distanceA = distance_between(ray.position, pointA)
+            distanceB = distance_between(ray.position, pointB)
+            if distanceA < distanceB:
+                intersection_point = pointA
+                normal = normA
+            else:
+                intersection_point = pointB
+                normal = normB
+        elif (pointA is not None):
+            intersection_point = pointA
+            normal = normA
+        else:
+            intersection_point = None
+            normal = None
+
+        return intersected, intersection_point, None, normal, None
+
+    elif resA[0]:
+        print("hi 2")
+        print(resA)
+        if (resA[1] is not None) and (resA[2] is not None):
+            distanceA1 = distance_between(ray.position, resA[1])
+            distanceA2 = distance_between(ray.position, resA[2])
+            if distanceA1 < distanceA2:
+                pointA = resA[1]
+                normA = resA[3]
+            else:
+                pointA = resA[2]
+                normA = resA[4]
+        elif (resA[1] is not None):
+            pointA = resA[1]
+            normA = resA[3]
+        else:
+            pointA = None
+        print(pointA)
+        return True, pointA, None, normA, None
+
+    elif resB[0]:
+        if (resB[1] is not None) and (resB[2] is not None):
+            distanceB1 = distance_between(ray.position, resB[1])
+            distanceB2 = distance_between(ray.position, resB[2])
+            if distanceB1 < distanceB2:
+                pointB = resB[1]
+                normB = resB[3]
+            else:
+                pointB = resB[2]
+                normB = resB[4]
+        elif (resB[1] is not None):
+            pointB = resB[1]
+            normB = resB[3]
+        else:
+            pointB = None
+        print(pointB)
+        return True, pointB, None, normB, None
+
+    else:
+        print("hi 4")
+        return False, None, None, None, None
+
+
+
+def operCsgIntersect(res1, res2):
     return "( " + str(tree1) + " n " + str(tree2) + " )"
 
-def operCsgDifference(tree1, tree2):
+def operCsgDifference(res1, res2):
     return "( " + str(tree1)  + " \ " + str(tree2) + " )"

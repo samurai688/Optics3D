@@ -9,7 +9,7 @@ Created on Sat Dec  8 23:10:35 2018
 import numpy as np
 from general import to_precision
 from general_optics import unit_vector, angle_between, distance_between, pathpatch_2d_to_3d, pathpatch_translate, \
-    rotation_matrix_axis_angle, project_onto_plane
+    rotation_matrix_axis_angle, project_onto_plane, postOrderEval, test_tree_intersect
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Circle as mplCircle
 from matplotlib.patches import Rectangle as mplRectangle
@@ -38,6 +38,24 @@ class Optic:
                                                        to_precision(self.normal[0], 5),
                                                        to_precision(self.normal[1], 5),
                                                        to_precision(self.normal[2], 5)))
+
+
+
+class Compound(Optic):
+    def __init__(self, tree):
+        self.tree = tree;
+
+    def __repr__(self):
+        return ("Compound")
+
+    def test_intersect(self, ray):
+        intersected, pt1, pt2, norm1, norm2 = test_tree_intersect(self.tree, ray)
+        return intersected, pt1, norm1  ## TODO
+
+    def draw(self, ax, view="3d"):
+        pass
+
+
 
 
 class Mirror(Optic):
@@ -90,7 +108,9 @@ class Mirror(Optic):
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt
+                        normal = surface.normal
         elif self.shape == "circular_concave_spherical":
+            normal = None # TODO
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
                     intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
@@ -113,6 +133,7 @@ class Mirror(Optic):
                     else:
                         intersection_pt = int_pt_sphere1
         elif self.shape == "circular_convex_spherical":
+            normal = None
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
                     intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
@@ -122,15 +143,16 @@ class Mirror(Optic):
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt_sphere1
+                        normal = -surface.normal(int_pt_sphere1)
                     if int_pt_sphere2 is not None:
                         distance_to_surface = distance_between(ray.position, int_pt_sphere2)
                         if distance_to_surface < min_distance:
                             min_distance = distance_to_surface
                             intersection_pt = int_pt_sphere2
+                            normal = -surface.normal(int_pt_sphere2)
         else:
             raise ValueError("unknown shape")
-        return intersected, intersection_pt
-
+        return intersected, intersection_pt, normal
 
     def draw(self, ax, view="3d"):  # Mirror
         """Um, somehow draw the optic"""
@@ -247,8 +269,10 @@ class Lens(Optic):
     def test_intersect(self, ray):  # Lens
         intersected = False
         intersection_pt = None
+        normal = None
         min_distance = np.inf
         if self.shape == "spherical_biconvex":
+            normal = None # TODO
             if self.thinlens:
                 for surface in self.surfaces: # if thinlens, intersect with the disc
                     intersected_here, int_pt = surface.test_intersect(ray)
@@ -268,6 +292,7 @@ class Lens(Optic):
                             min_distance = distance_to_surface
                             intersection_pt = int_pt
         elif self.shape == "circular_concave_spherical":
+            normal = None # TODO
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
                     intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
@@ -286,7 +311,7 @@ class Lens(Optic):
                         intersection_pt = int_pt_sphere1
                     else:
                         intersection_pt = int_pt_sphere2
-        return intersected, intersection_pt
+        return intersected, intersection_pt, normal
 
 
 class Grating(Optic):
@@ -327,7 +352,7 @@ class Grating(Optic):
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt
-        return intersected, intersection_pt
+        return intersected, intersection_pt, self.normal
 
     def draw(self, ax, view="3d"):  # Grating
         """Um, somehow draw the optic"""
@@ -383,7 +408,7 @@ class Detector(Optic):
                         intersection_pt = int_pt
             if intersected:
                 self.hit_data.append(np.append(intersection_pt, ray.wavelength))
-        return intersected, intersection_pt
+        return intersected, intersection_pt, self.normal
 
     def draw(self, ax, view="3d"):  # Detector
         """Um, somehow draw the optic"""
@@ -512,8 +537,8 @@ class Ray:
         """
         Test if the ray intersects a particular optic
         """
-        intersected, intersection_pt = optic.test_intersect(self)  # self is the ray
-        return intersected, intersection_pt
+        intersected, intersection_pt, normal = optic.test_intersect(self)  # self is the ray
+        return intersected, intersection_pt, normal
 
     def run(self, max_distance, optic_list=[], max_interactions=np.inf):
         """
@@ -534,10 +559,13 @@ class Ray:
                     continue
                 elif isinstance(optic, Window):
                     continue
-                intersected_here, pt = self.test_intersect(optic, distance_remaining)
+                print("this call")
+                intersected_here, pt, normal = self.test_intersect(optic, distance_remaining)
+                print("this call is done")
+                print(f"normal = {normal}")
                 if intersected_here:
                     distance_to_optic = distance_between(self.position, pt)
-                    print(distance_to_optic)
+                    # print(distance_to_optic)
                     if distance_to_optic > INTERSECT_CLIPPING_FLOOR:
                         intersected = True
                         if distance_to_optic < min_distance:
@@ -556,7 +584,13 @@ class Ray:
                 self.fly(distance=distance_to_int_optic)
                 distance_remaining -= distance_to_int_optic
                 interaction_count += 1
-                if isinstance(intersected_optic, Mirror):
+                if isinstance(intersected_optic, Compound):
+                    print(f"normal = {normal}")
+                    print(f"intersection_pt = {intersection_pt}")
+                    self.reflect(reflect_type="specular_flat",
+                                 normal=normal,
+                                 intersection_pt=intersection_pt)
+                elif isinstance(intersected_optic, Mirror):
                     if intersected_optic.shape == "circular_flat" or intersected_optic.shape == "rectangular_flat":
                         self.reflect(reflect_type="specular_flat",
                                      normal=intersected_optic.normal,

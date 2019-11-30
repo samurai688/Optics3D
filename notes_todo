@@ -113,9 +113,18 @@
         okay let's work toward this so we can populate a tree with this stuff
         okay we can! yay
         I guess it would be cool if the operations could detect if they overlap or not and throw errors, TODO future
-    alright now let's work toward tracing a scene with several reflective sphere's in it
+    alright now let's work toward tracing a scene with several reflective spheres in it
         do a single reflective sphere: check
         do multiple non-intersecting spheres bounce bounce bounce: check
+        hmm, how to do a boolean
+    the way it works now is, the Ray run method checks through all types of optics and calls the appropriate method
+    e.g. reflect, refract, etc. Ultimately you'd probably want that code in the optic class but anyway.
+    so we'd need
+        a new optic class that can contain a tree of multiple shapes, say two spheres
+        that class will implement a test_intersect method that will need to be csg aware
+        in Ray.run we can detect if we're intersecting a member of that class and then do something csg aware to handle
+        okay
+
 
 
 
