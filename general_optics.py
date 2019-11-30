@@ -6,7 +6,6 @@
 
 
 import numpy as np
-import operator
 from mpl_toolkits.mplot3d import art3d
 
 
@@ -184,11 +183,14 @@ def postOrderEval(tree):
         else:
             return tree.getRootVal()
 
+
 def printCsgUnion(res1, res2):
     return "( " + str(res1) + " u " + str(res2) + " )"
 
+
 def printCsgIntersect(res1, res2):
     return "( " + str(res1) + " n " + str(res2) + " )"
+
 
 def printCsgDifference(res1, res2):
     return "( " + str(res1)  + " \ " + str(res2) + " )"

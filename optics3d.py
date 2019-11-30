@@ -114,7 +114,7 @@ class Mirror(Optic):
             if intersected_sphere:
                 for surface in self.surfaces:
                     if isinstance(surface, Disc):  # then check for intersection with the disc
-                        intersected_disc, int_pt_disc, normal = surface.test_intersect(ray)
+                        intersected_disc, int_pt_disc, normal_disc = surface.test_intersect(ray)
                         break
                 if intersected_sphere and intersected_disc:
                     intersected = True  # pick the sphere intersection that is closest to the disc
@@ -124,10 +124,13 @@ class Mirror(Optic):
                         distance2 = distance_between(int_pt_disc, int_pt_sphere2)
                         if distance1 < distance2:
                             intersection_pt = int_pt_sphere1
+                            normal = norm1
                         else:
                             intersection_pt = int_pt_sphere2
+                            normal = norm2
                     else:
                         intersection_pt = int_pt_sphere1
+                        normal = norm1
         elif self.shape == "circular_convex_spherical":
             normal = None
             for surface in self.surfaces:
@@ -139,13 +142,13 @@ class Mirror(Optic):
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt_sphere1
-                        normal = -surface.normal(int_pt_sphere1)
+                        normal = -norm1
                     if int_pt_sphere2 is not None:
                         distance_to_surface = distance_between(ray.position, int_pt_sphere2)
                         if distance_to_surface < min_distance:
                             min_distance = distance_to_surface
                             intersection_pt = int_pt_sphere2
-                            normal = -surface.normal(int_pt_sphere2)
+                            normal = -norm2
         else:
             raise ValueError("unknown shape")
         return intersected, intersection_pt, normal
@@ -557,6 +560,7 @@ class Ray:
                             min_distance = distance_to_optic
                             intersected_optic = optic
                             intersection_pt = int_pt
+                            intersection_normal = normal
             if not intersected:
                 if self.print_trajectory:
                     print("not intersected (messages TODO)")
@@ -570,44 +574,41 @@ class Ray:
                 distance_remaining -= distance_to_int_optic
                 interaction_count += 1
                 if isinstance(intersected_optic, Compound):
-                    print(f"normal = {normal}")
                     print(f"intersection_pt = {intersection_pt}")
+                    print(f"intersection_normal = {intersection_normal}")
                     self.reflect(reflect_type="specular_flat",
-                                 normal=normal,
+                                 normal=intersection_normal,
                                  intersection_pt=intersection_pt)
                 elif isinstance(intersected_optic, Mirror):
                     if intersected_optic.shape == "circular_flat" or intersected_optic.shape == "rectangular_flat":
                         self.reflect(reflect_type="specular_flat",
-                                     normal=intersected_optic.normal,
+                                     normal=intersection_normal,
                                      intersection_pt=intersection_pt)
                     elif intersected_optic.shape == "circular_concave_spherical":
-                        for surface in intersected_optic.surfaces:
-                            if isinstance(surface, Sphere):
-                                normal = surface.normal(intersection_pt)
-                                break
                         self.reflect(reflect_type="specular_flat",
-                                     normal=normal,
+                                     normal=intersection_normal,
                                      intersection_pt=intersection_pt)
                     elif intersected_optic.shape == "circular_convex_spherical":
-                        for surface in intersected_optic.surfaces:
-                            if isinstance(surface, Sphere):
-                                normal = -surface.normal(intersection_pt)
-                                break
                         self.reflect(reflect_type="specular_flat",
-                                     normal=normal,
+                                     normal=intersection_normal,
                                      intersection_pt=intersection_pt)
                     else:
                         raise ValueError("Unrecognized shape")
                 elif isinstance(intersected_optic, Grating):
                     if self.order == 0:
-                        self.reflect(reflect_type="specular_flat", normal=intersected_optic.normal,
+                        self.reflect(reflect_type="specular_flat",
+                                     normal=intersection_normal,
                                      intersection_pt=intersection_pt)
                     else:
-                        self.reflect(reflect_type="grating", normal=intersected_optic.normal,
-                                     optic=intersected_optic, intersection_pt=intersection_pt)
+                        self.reflect(reflect_type="grating",
+                                     normal=intersection_normal,
+                                     optic=intersected_optic,
+                                     intersection_pt=intersection_pt)
                 elif isinstance(intersected_optic, Lens):
-                    self.refract(refract_type="thin_lens", normal=intersected_optic.normal,
-                                 optic=intersected_optic, intersection_pt=intersection_pt)
+                    self.refract(refract_type="thin_lens",
+                                 normal=intersection_normal,
+                                 optic=intersected_optic,
+                                 intersection_pt=intersection_pt)
                 elif isinstance(intersected_optic, Detector):
                     blocked = True
                 elif isinstance(intersected_optic, Block):

@@ -139,7 +139,7 @@
         does everything in one go, figures out intersect point, normal, and behavior, and passes it back to the ray.
         other refactor issues:
             need to move intersectDisc etc functions in shapes.py into the respective classes
-            the script_tests need to be consolidated and put into a testing framework
+            the script_tests need to be consolidated and put into the pytest framework
 
 
 
