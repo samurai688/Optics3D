@@ -13,7 +13,7 @@ from general import set_axes_equal
 plt.close("all")
 
 
-max_ray_run_distance = 100 # mm
+max_ray_run_distance = 200 # mm
 
 mirror1_pos = np.array([0, 100, 0])
 mirror1_normal = np.array([0, -1, 0])

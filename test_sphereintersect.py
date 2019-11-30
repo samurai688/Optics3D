@@ -9,7 +9,7 @@ Created on Sat Dec  8 23:47:35 2018
 import pytest
 import numpy as np
 from optics3d import Ray
-from Shapes.shapes import Sphere, intersectSphere
+from Shapes.shapes import Sphere
 
 two_hit_rays = [
     Ray(np.array([0, 0, 0]), np.array([0, 1, 0]), wavelength=532, print_trajectory=False),
@@ -34,19 +34,19 @@ def my_sphere():
 
 @pytest.mark.parametrize("ray", two_hit_rays)
 def test_two_hit_rays(my_sphere, ray):
-    assert intersectSphere(ray, my_sphere)[0] is True
-    assert intersectSphere(ray, my_sphere)[2] is not None
+    assert my_sphere.test_intersect(ray)[0] is True
+    assert my_sphere.test_intersect(ray)[2] is not None
 
 
 @pytest.mark.parametrize("ray", one_hit_rays)
 def test_one_hit_rays(my_sphere, ray):
-    assert intersectSphere(ray, my_sphere)[0] is True
-    assert intersectSphere(ray, my_sphere)[2] is None
+    assert my_sphere.test_intersect(ray)[0] is True
+    assert my_sphere.test_intersect(ray)[2] is None
 
 
 @pytest.mark.parametrize("ray", miss_rays)
 def test_miss_rays(my_sphere, ray):
-    assert intersectSphere(ray, my_sphere)[0] is False
+    assert my_sphere.test_intersect(ray)[0] is False
 
 
 

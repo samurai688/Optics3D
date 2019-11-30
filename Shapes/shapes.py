@@ -8,39 +8,6 @@ import numpy as np
 from general_optics import unit_vector, distance_between
 
 
-def intersectPlane(ray, plane):
-    denominator = np.dot(unit_vector(plane.normal), unit_vector(ray.direction))
-    #  0.000001 is an arbitrary epsilon value. We just want
-    #  to avoid working with intersections that are almost
-    #  orthogonal.
-    if np.abs(denominator) > 0.000001:
-        difference = plane.center - ray.position
-        t = np.dot(difference, plane.normal) / denominator
-        if t > 0.000001:
-            intersection_pt = ray.position + t * ray.direction
-            return True, intersection_pt
-    return False, None
-
-
-def intersectRectangle(ray, rectangle):
-    # https://stackoverflow.com/questions/2752725/finding-whether-a-point-lies-inside-a-rectangle-or-not
-    # Dec 9 2018
-    # Eric Baineville's answer
-    intersect_the_plane, intersection_pt = intersectPlane(ray, rectangle.plane)
-    if intersect_the_plane:
-        M = intersection_pt
-        A = rectangle.bounds[0, :]
-        B = rectangle.bounds[1, :]
-        C = rectangle.bounds[2, :]
-        AB = B - A
-        BC = C - B
-        AM = M - A
-        BM = M - B
-        if 0 <= np.dot(AB, AM) <= np.dot(AB, AB):
-            if 0 <= np.dot(BC, BM) <= np.dot(BC, BC):
-                return True, intersection_pt
-    return False, None
-
 def check_R_and_D(R, D):
     if R is None:
         if D is None:
@@ -58,6 +25,7 @@ def check_R_and_D(R, D):
             raise ValueError("Conflicting R and D specified")
     return R, D
 
+
 def check_h_and_w(h, w):
     if h is None:
         raise ValueError("Need to specify h")
@@ -68,8 +36,6 @@ def check_h_and_w(h, w):
     if w < 0:
         raise ValueError("h must be positive")
     return h, w
-
-
 
 
 class Shape:
@@ -124,7 +90,7 @@ class Disc(Circle):
         self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
-        intersected, intersection_pt, normal = intersectPlane(ray, self.plane)
+        intersected, intersection_pt, normal = self.plane.test_intersect(ray)
         if intersected:
             if distance_between(intersection_pt, self.center) < self.R:
                 return True, intersection_pt, normal
@@ -181,6 +147,7 @@ class Sphere(Shape):
         elif discrim == 0:  # line intersects in one point, tangent
             t0 = vDotQ
             pt0 = ray.position + t0 * ray.direction
+            norm0 = self.normal(pt0)
             return True, pt0, None, norm0, None
 
         else:  # discrim < 0   # line does not intersect
@@ -206,8 +173,25 @@ class Rectangle(Shape):
         self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
-        intersected, int_pt = intersectRectangle(ray, self)
-        return intersected, int_pt, self.normal
+        # intersected, int_pt = intersectRectangle(ray, self)
+        # https://stackoverflow.com/questions/2752725/finding-whether-a-point-lies-inside-a-rectangle-or-not
+        # Dec 9 2018
+        # Eric Baineville's answer
+        intersect_the_plane, intersection_pt, normal = self.plane.test_intersect(ray)
+        if intersect_the_plane:
+            M = intersection_pt
+            A = self.bounds[0, :]
+            B = self.bounds[1, :]
+            C = self.bounds[2, :]
+            AB = B - A
+            BC = C - B
+            AM = M - A
+            BM = M - B
+            if 0 <= np.dot(AB, AM) <= np.dot(AB, AB):
+                if 0 <= np.dot(BC, BM) <= np.dot(BC, BC):
+                    return True, intersection_pt, normal
+        return False, None, None
+        return intersected, int_pt, normal
 
     def __repr__(self):
         return (

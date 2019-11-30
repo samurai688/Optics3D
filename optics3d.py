@@ -114,7 +114,7 @@ class Mirror(Optic):
             if intersected_sphere:
                 for surface in self.surfaces:
                     if isinstance(surface, Disc):  # then check for intersection with the disc
-                        intersected_disc, int_pt_disc = surface.test_intersect(ray)
+                        intersected_disc, int_pt_disc, normal = surface.test_intersect(ray)
                         break
                 if intersected_sphere and intersected_disc:
                     intersected = True  # pick the sphere intersection that is closest to the disc
@@ -268,10 +268,10 @@ class Lens(Optic):
         normal = None
         min_distance = np.inf
         if self.shape == "spherical_biconvex":
-            normal = None # TODO
+            normal = None
             if self.thinlens:
                 for surface in self.surfaces: # if thinlens, intersect with the disc
-                    intersected_here, int_pt = surface.test_intersect(ray)
+                    intersected_here, int_pt, normal = surface.test_intersect(ray)
                     if intersected_here:
                         intersected = True
                         distance_to_surface = distance_between(ray.position, int_pt)
@@ -280,7 +280,7 @@ class Lens(Optic):
                             intersection_pt = int_pt
             else:
                 for surface in self.surfaces:  # TODO for now this is just the one disc
-                    intersected_here, int_pt = surface.test_intersect(ray)
+                    intersected_here, int_pt, normal = surface.test_intersect(ray)
                     if intersected_here:
                         intersected = True
                         distance_to_surface = distance_between(ray.position, int_pt)
@@ -341,14 +341,14 @@ class Grating(Optic):
         min_distance = np.inf
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
             for surface in self.surfaces:  # for now this is just the one disc or rectangle
-                intersected_here, int_pt = surface.test_intersect(ray)
+                intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True
                     distance_to_surface = distance_between(ray.position, int_pt)
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt
-        return intersected, intersection_pt, self.normal
+        return intersected, intersection_pt, normal
 
     def draw(self, ax, view="3d"):  # Grating
         """Um, somehow draw the optic"""

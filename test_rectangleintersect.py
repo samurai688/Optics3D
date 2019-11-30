@@ -9,7 +9,7 @@ Created on Sat Dec  8 23:47:35 2018
 import pytest
 import numpy as np
 from optics3d import Ray
-from Shapes.shapes import Rectangle, intersectRectangle
+from Shapes.shapes import Rectangle
 
 
 
@@ -33,11 +33,11 @@ def my_rectangle():
 
 @pytest.mark.parametrize("ray", hit_rays)
 def test_hit_rays(my_rectangle, ray):
-    assert intersectRectangle(ray, my_rectangle)[0] is True
+    assert my_rectangle.test_intersect(ray)[0] is True
 
 
 @pytest.mark.parametrize("ray", miss_rays)
 def test_miss_rays(my_rectangle, ray):
-    assert intersectRectangle(ray, my_rectangle)[0] is False
+    assert my_rectangle.test_intersect(ray)[0] is False
 
 
