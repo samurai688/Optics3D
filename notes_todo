@@ -124,6 +124,11 @@
         that class will implement a test_intersect method that will need to be csg aware
         in Ray.run we can detect if we're intersecting a member of that class and then do something csg aware to handle
         okay
+        okay well some distracted hacking later we have a compound of two spheres that seems to maybe work
+        probably a decent amount of damage
+            I changed it so that normals get passed back from test_intersect, that's probably gonna break everything
+            only union is implemented
+            general refactoring needed
 
 
 
