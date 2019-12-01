@@ -12,9 +12,9 @@ from optics3d import Ray, Lens
 import matplotlib.pyplot as plt
 plt.close("all")
 
-lens_center = np.array([0, 50, 0])
+lens_center = np.array([0, 100, 0])
 
-lens1 = Lens(lens_center, shape="spherical", D=50, thinlens=False, index=1.3)
+lens1 = Lens(lens_center, shape="spherical", D=50, thinlens=False, index=0.5)
 Optic_list = []
 Optic_list.append(lens1)
 

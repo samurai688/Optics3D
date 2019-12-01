@@ -571,16 +571,22 @@ class Ray:
             # surface normal should face toward material you are coming from
             #
 
-            # TODO: handle total internal reflection
-            # if eta_1 > eta_2:
-            #     theta_critical = np.arcsin(eta_2 / eta_1)
-
+            do_total_internal_reflection = False
             i = self.direction
             n = normal
             cos_theta_incident = np.dot(-i, n)
             sin_squared_theta_transmitted = (eta1 / eta2) ** 2 * (1 - cos_theta_incident ** 2)
-            t = (eta1 / eta2) * i + ((eta1 / eta2) * cos_theta_incident - np.sqrt(1 - sin_squared_theta_transmitted)) * n
-            self.direction = t
+
+            if eta1 > eta2:
+                if sin_squared_theta_transmitted > 1:  # eq. 24
+                    do_total_internal_reflection = True
+                    self.reflect(reflect_type="specular_flat",
+                                 normal=normal,
+                                 intersection_pt=intersection_pt)
+
+            if not do_total_internal_reflection:
+                t = (eta1 / eta2) * i + ((eta1 / eta2) * cos_theta_incident - np.sqrt(1 - sin_squared_theta_transmitted)) * n
+                self.direction = t
 
         else:
             raise ValueError("Unrecognized refract_type input ")

@@ -151,6 +151,11 @@
             also had to add a floor of 1e-12 to the sphere intersect checks, hope that works out okay
             still need to handle: total internal reflection
 
+    12/1/19
+
+        i feel like the refract will crash if we give it total internal reflection conditions, let's do that
+        alright that looks like a pretty fair attempt
+
 
 
 
