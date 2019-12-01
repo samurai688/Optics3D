@@ -28,7 +28,6 @@ class Optic:
         self.normal = unit_vector(normal)
         self.shape = shape
 
-
     def __repr__(self):
         return("Optic ({}, {}, {}),  ({}, {}, {})".format(self.optic_type,
                                                        to_precision(self.position[0], 5),
@@ -37,6 +36,13 @@ class Optic:
                                                        to_precision(self.normal[0], 5),
                                                        to_precision(self.normal[1], 5),
                                                        to_precision(self.normal[2], 5)))
+
+    def do_intersect(self, ray, int_pt, int_normal, int_optic=None):
+        # do nothing
+        return ray
+
+    def draw(self, ax, view="3d"):
+        pass
 
 
 class Compound(Optic):
@@ -49,6 +55,13 @@ class Compound(Optic):
     def test_intersect(self, ray):
         intersected, pt1, pt2, norm1, norm2 = test_tree_intersect(self.tree, ray)
         return intersected, pt1, norm1  ## TODO
+
+    def do_intersect(self, ray, intersection_pt, intersection_normal):
+        print(f"intersection_pt = {intersection_pt}")
+        print(f"intersection_normal = {intersection_normal}")
+        ray.reflect(reflect_type="specular_flat",
+                    normal=intersection_normal,
+                    intersection_pt=intersection_pt)
 
     def draw(self, ax, view="3d"):
         pass
@@ -106,7 +119,7 @@ class Mirror(Optic):
                         intersection_pt = int_pt
                         normal = surface.normal
         elif self.shape == "circular_concave_spherical":
-            normal = None # TODO
+            normal = None
             for surface in self.surfaces:
                 if isinstance(surface, Sphere):  # first check for intersection with the sphere
                     intersected_sphere, int_pt_sphere1, int_pt_sphere2, norm1, norm2 = surface.test_intersect(ray)
@@ -152,6 +165,11 @@ class Mirror(Optic):
         else:
             raise ValueError("unknown shape")
         return intersected, intersection_pt, normal
+
+    def do_intersect(self, ray, intersection_pt, intersection_normal):
+        ray.reflect(reflect_type="specular_flat",
+                    normal=intersection_normal,
+                    intersection_pt=intersection_pt)
 
     def draw(self, ax, view="3d"):  # Mirror
         """Um, somehow draw the optic"""
@@ -247,24 +265,6 @@ class Lens(Optic):
                                                            to_precision(self.normal[1], 5),
                                                            to_precision(self.normal[2], 5)))
 
-    def draw(self, ax, view="3d"):  # Lens
-        """Um, somehow draw the optic"""
-        # 3D
-        # https://stackoverflow.com/questions/18228966/how-can-matplotlib-2d-patches-be-transformed-to-3d-with-arbitrary-normals
-        if view == "3d" or view == "xyz":
-            if self.shape == "spherical_biconvex":
-                x = self.position[0]
-                y = self.position[1]
-                z = self.position[2]
-                p = mplCircle((0, 0), self.D / 2, facecolor="silver", alpha=0.5, edgecolor="black")
-                ax.add_patch(p)
-                pathpatch_2d_to_3d(p, z=0, normal=self.normal)
-                pathpatch_translate(p, (x, y, z))
-                # return the Artist created
-                return None
-            else:
-                raise ValueError("unknown shape")
-
     def test_intersect(self, ray):  # Lens
         intersected = False
         intersection_pt = None
@@ -312,6 +312,30 @@ class Lens(Optic):
                         intersection_pt = int_pt_sphere2
         return intersected, intersection_pt, normal
 
+    def do_intersect(self, ray, intersection_pt, intersection_normal):
+        ray.refract(refract_type="thin_lens",
+                    normal=intersection_normal,
+                    optic=self,
+                    intersection_pt=intersection_pt)
+
+    def draw(self, ax, view="3d"):  # Lens
+        """Um, somehow draw the optic"""
+        # 3D
+        # https://stackoverflow.com/questions/18228966/how-can-matplotlib-2d-patches-be-transformed-to-3d-with-arbitrary-normals
+        if view == "3d" or view == "xyz":
+            if self.shape == "spherical_biconvex":
+                x = self.position[0]
+                y = self.position[1]
+                z = self.position[2]
+                p = mplCircle((0, 0), self.D / 2, facecolor="silver", alpha=0.5, edgecolor="black")
+                ax.add_patch(p)
+                pathpatch_2d_to_3d(p, z=0, normal=self.normal)
+                pathpatch_translate(p, (x, y, z))
+                # return the Artist created
+                return None
+            else:
+                raise ValueError("unknown shape")
+
 
 class Grating(Optic):
     def __init__(self, position, normal, tangent, shape="rectangular_flat", w=None, h=None, G=None,
@@ -352,6 +376,17 @@ class Grating(Optic):
                         min_distance = distance_to_surface
                         intersection_pt = int_pt
         return intersected, intersection_pt, normal
+
+    def do_intersect(self, ray, intersection_pt, intersection_normal):
+        if ray.order == 0:
+            ray.reflect(reflect_type="specular_flat",
+                        normal=intersection_normal,
+                        intersection_pt=intersection_pt)
+        else:
+            ray.reflect(reflect_type="grating",
+                        normal=intersection_normal,
+                        optic=self,
+                        intersection_pt=intersection_pt)
 
     def draw(self, ax, view="3d"):  # Grating
         """Um, somehow draw the optic"""
@@ -409,6 +444,9 @@ class Detector(Optic):
                 self.hit_data.append(np.append(intersection_pt, ray.wavelength))
         return intersected, intersection_pt, normal
 
+    def do_intersect(self, ray, int_pt, int_normal, int_optic=None):
+        ray.blocked = True
+
     def draw(self, ax, view="3d"):  # Detector
         """Um, somehow draw the optic"""
         if view == "3d" or view == "xyz":
@@ -437,7 +475,9 @@ class Window(Optic):
 
 
 class Block(Optic):
-    pass
+
+    def do_intersect(self, ray, int_pt, int_normal, int_optic=None):
+        ray.blocked = True
 
 
 class Ray:
@@ -449,6 +489,7 @@ class Ray:
         self.point_history = []
         self.point_history.append(position)
         self.print_trajectory = print_trajectory
+        self.blocked = False
         if self.print_trajectory:
             print(self)
         
@@ -536,10 +577,9 @@ class Ray:
         """
         interaction_count = 0
         distance_remaining = max_distance
-        blocked = False
         if self.print_trajectory:
             print("--- run begin ---")
-        while(distance_remaining > 0 and interaction_count < max_interactions and not blocked):
+        while(distance_remaining > 0 and interaction_count < max_interactions and not self.blocked):
             intersected = False
             min_distance = np.inf
             for optic in optic_list:
@@ -549,7 +589,9 @@ class Ray:
                     continue
                 elif isinstance(optic, Window):
                     continue
+                # do it:
                 intersected_here, int_pt, normal = optic.test_intersect(self)
+                # we did it
                 if intersected_here:
                     distance_to_optic = distance_between(self.position, int_pt)
                     if distance_to_optic > distance_remaining:
@@ -573,54 +615,9 @@ class Ray:
                 self.fly(distance=distance_to_int_optic)
                 distance_remaining -= distance_to_int_optic
                 interaction_count += 1
-                if isinstance(intersected_optic, Compound):
-                    print(f"intersection_pt = {intersection_pt}")
-                    print(f"intersection_normal = {intersection_normal}")
-                    self.reflect(reflect_type="specular_flat",
-                                 normal=intersection_normal,
-                                 intersection_pt=intersection_pt)
-                elif isinstance(intersected_optic, Mirror):
-                    if intersected_optic.shape == "circular_flat" or intersected_optic.shape == "rectangular_flat":
-                        self.reflect(reflect_type="specular_flat",
-                                     normal=intersection_normal,
-                                     intersection_pt=intersection_pt)
-                    elif intersected_optic.shape == "circular_concave_spherical":
-                        self.reflect(reflect_type="specular_flat",
-                                     normal=intersection_normal,
-                                     intersection_pt=intersection_pt)
-                    elif intersected_optic.shape == "circular_convex_spherical":
-                        self.reflect(reflect_type="specular_flat",
-                                     normal=intersection_normal,
-                                     intersection_pt=intersection_pt)
-                    else:
-                        raise ValueError("Unrecognized shape")
-                elif isinstance(intersected_optic, Grating):
-                    if self.order == 0:
-                        self.reflect(reflect_type="specular_flat",
-                                     normal=intersection_normal,
-                                     intersection_pt=intersection_pt)
-                    else:
-                        self.reflect(reflect_type="grating",
-                                     normal=intersection_normal,
-                                     optic=intersected_optic,
-                                     intersection_pt=intersection_pt)
-                elif isinstance(intersected_optic, Lens):
-                    self.refract(refract_type="thin_lens",
-                                 normal=intersection_normal,
-                                 optic=intersected_optic,
-                                 intersection_pt=intersection_pt)
-                elif isinstance(intersected_optic, Detector):
-                    blocked = True
-                elif isinstance(intersected_optic, Block):
-                    blocked = True
-                elif isinstance(intersected_optic, Annotation):
-                    pass
-                elif isinstance(intersected_optic, Filter):
-                    pass
-                elif isinstance(intersected_optic, Window):
-                    pass
-                else:
-                    raise NotImplementedError("Dude")
+                # do it:
+                intersected_optic.do_intersect(self, intersection_pt, intersection_normal)
+                # we did it
         if self.print_trajectory:
             print("--- run complete ---")
 
