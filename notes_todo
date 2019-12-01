@@ -139,7 +139,12 @@
         does everything in one go, figures out intersect point, normal, and behavior, and passes it back to the ray.
         other refactor issues:
             need to move intersectDisc etc functions in shapes.py into the respective classes
-            the script_tests need to be consolidated and put into the pytest framework
+            the script_tests need to be consolidated and put into the pytest framework, put this off for now
+        alright, did it, so now the optic class will have most of the code that determines what it does. good good
+        one frontier that we need to do is multiple intersections, same optic.  e.g., a thick piece of refracting glass.
+        we have vector expressions in that 2006 pdf by Bram de Greve for the refracted ray, and we can count the
+        intersection points to find if the ray is entering or leaving. not sure how to extend to compound optics, but,
+        leave that for another day. Let's try to do a thick glass sphere with some index of refraction > 1.
 
 
 

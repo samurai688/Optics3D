@@ -290,26 +290,8 @@ class Lens(Optic):
                         if distance_to_surface < min_distance:
                             min_distance = distance_to_surface
                             intersection_pt = int_pt
-        elif self.shape == "circular_concave_spherical":
-            normal = None # TODO
-            for surface in self.surfaces:
-                if isinstance(surface, Sphere):  # first check for intersection with the sphere
-                    intersected_sphere, int_pt_sphere1, int_pt_sphere2 = surface.test_intersect(ray)
-                    break
-            if intersected_sphere:
-                for surface in self.surfaces:
-                    if isinstance(surface, Disc):  # then check for intersection with the disc
-                        intersected_disc, int_pt_disc = surface.test_intersect(ray)
-                        break
-                if intersected_sphere and intersected_disc:
-                    intersected = True  # pick the sphere intersection that is closest to the disc
-                                        # TODO: edge cases, the above isn't exhaustive
-                    distance1 = distance_between(int_pt_disc, int_pt_sphere1)
-                    distance2 = distance_between(int_pt_disc, int_pt_sphere2)
-                    if distance1 < distance2:
-                        intersection_pt = int_pt_sphere1
-                    else:
-                        intersection_pt = int_pt_sphere2
+        else:
+            raise ValueError("Unhandled shape")
         return intersected, intersection_pt, normal
 
     def do_intersect(self, ray, intersection_pt, intersection_normal):
