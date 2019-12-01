@@ -8,6 +8,9 @@ import numpy as np
 from general_optics import unit_vector, distance_between
 
 
+INTERSECT_CLIPPING_FLOOR = 1e-12
+
+
 def check_R_and_D(R, D):
     if R is None:
         if D is None:
@@ -121,6 +124,7 @@ class Sphere(Shape):
         vDotQ = np.dot(ray.direction, q)
         squareDiffs = np.dot(q, q) - self.R * self.R
         discrim = vDotQ * vDotQ - squareDiffs
+        shooting_from_outside = True
         if discrim > 0:  # line intersects in two points
             root = np.sqrt(discrim)
             t0 = (vDotQ - root)
@@ -133,25 +137,27 @@ class Sphere(Shape):
             # If one t is positive one t is negative, ray is shooting from inside
             # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
             # So we have to return the smaller and positive t as the intersecting distance for the ray
-            if t0 > 0 and t1 > 0:
+            if t0 > INTERSECT_CLIPPING_FLOOR and t1 > INTERSECT_CLIPPING_FLOOR:
                 if t0 < t1:
-                    return True, pt1, pt0, norm1, norm0
+                    return True, pt1, pt0, norm1, norm0, shooting_from_outside
                 else:
-                    return True, pt0, pt1, norm0, norm1
-            elif t0 < 0 and t1 > 0:
-                return True, pt1, None, norm1, None
-            elif t0 > 0 and t1 < 0:
-                return True, pt0, None, norm0, None
+                    return True, pt0, pt1, norm0, norm1, shooting_from_outside
+            elif t1 > INTERSECT_CLIPPING_FLOOR:
+                shooting_from_outside = False
+                return True, pt1, None, norm1, None, shooting_from_outside
+            elif t0 > INTERSECT_CLIPPING_FLOOR:
+                shooting_from_outside = False
+                return True, pt0, None, norm0, None, shooting_from_outside
             else:
-                return False, None, None, None, None
+                return False, None, None, None, None, shooting_from_outside
         elif discrim == 0:  # line intersects in one point, tangent
             t0 = vDotQ
             pt0 = ray.position + t0 * ray.direction
             norm0 = self.normal(pt0)
-            return True, pt0, None, norm0, None
+            return True, pt0, None, norm0, None, shooting_from_outside
 
         else:  # discrim < 0   # line does not intersect
-            return False, None, None, None, None
+            return False, None, None, None, None, shooting_from_outside
 
 
 class Rectangle(Shape):

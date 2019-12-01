@@ -145,6 +145,12 @@
         we have vector expressions in that 2006 pdf by Bram de Greve for the refracted ray, and we can count the
         intersection points to find if the ray is entering or leaving. not sure how to extend to compound optics, but,
         leave that for another day. Let's try to do a thick glass sphere with some index of refraction > 1.
+            okay we did a thick glass refractive ball!
+            it's a little ugly the way it's implemented, there is a variable shooting_from_outside gets passed around
+            not sure if that will scale well to more complex stuff
+            also had to add a floor of 1e-12 to the sphere intersect checks, hope that works out okay
+            still need to handle: total internal reflection
+
 
 
 
