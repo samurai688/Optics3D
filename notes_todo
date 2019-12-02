@@ -155,6 +155,15 @@
 
         i feel like the refract will crash if we give it total internal reflection conditions, let's do that
         alright that looks like a pretty fair attempt
+        some notes and thoughts for the future:
+            the big challenge ahead is getting the boolean combinations of primitives working.  We kind of have a union
+            working but it's not that thoroughly tested. Still need intersect and difference.
+            - one issue is how are we going to handle going between adjacent regions with different indices.
+                - it might be good to have each ray keep memory of the index they're currently flying in, and then:
+                - then combining with that, you could have the ray analyze and if it has a "leave" and "enter" intersect
+                  in the same small tolerance, you could have it skip right to the "enter" intersect to have it be right
+            also need to add more primitives, general fixes / cleanup
+
 
 
 
