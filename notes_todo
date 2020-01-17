@@ -164,6 +164,11 @@
                   in the same small tolerance, you could have it skip right to the "enter" intersect to have it be right
             also need to add more primitives, general fixes / cleanup
 
+    1/17/2020
+
+        happy new decade!
+        eh, let's just try to add in intersect and difference, that way we can combine them all and see all the bugs
+
 
 
 
