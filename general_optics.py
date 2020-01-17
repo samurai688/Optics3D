@@ -209,45 +209,47 @@ def test_tree_intersect(tree, ray):
             return tree.getRootVal().test_intersect(ray)
 
 
+def helper_findMinRes(res, ray):
+
+    # if res is a hit, get t_min
+    if (res[1] is not None) and (res[2] is not None):
+        distance1 = distance_between(ray.position, res[1])
+        distance2 = distance_between(ray.position, res[2])
+        if distance1 < distance2:
+            point = res[1]
+            norm = res[3]
+        else:
+            point = res[2]
+            norm = res[4]
+    elif (res[1] is not None):
+        point = res[1]
+        norm = res[3]
+    else:
+        point = None
+        norm = None
+    return point, norm
+
+
 def operCsgUnion(resA, resB, ray):
-    # have two inputs of syntax e.g.  "False, None, None, None, None"  or  "True, int-pt1, int-pt2, norm1, norm2"
+    # have two inputs of syntax: intersected, int-pt1, int-pt2, norm1, norm2    (None if none)
+    # e.g.  "False, None, None, None, None"    if there's no intersect with that primitive
+    # e.g. "True, int-pt1, int-pt2, norm1, norm2"   if the ray intersects twice, goes in and out
     # UNION: min(tA_min, tB_min)
     intersected = False
+    normB = None
+    normA = None
+
+    # if the ray is hitting both primitives:
     if resA[0] and resB[0]:
-        # print("hi 1")
         intersected = True
-        normB = None
-        normA = None
-        if (resA[1] is not None) and (resA[2] is not None):
-            distanceA1 = distance_between(ray.position, resA[1])
-            distanceA2 = distance_between(ray.position, resA[2])
-            if distanceA1 < distanceA2:
-                pointA = resA[1]
-                normA = resA[3]
-            else:
-                pointA = resA[2]
-                normA = resA[4]
-        elif (resA[1] is not None):
-            pointA = resA[1]
-            normA = resA[3]
-        else:
-            pointA = None
 
-        if (resB[1] is not None) and (resB[2] is not None):
-            distanceB1 = distance_between(ray.position, resB[1])
-            distanceB2 = distance_between(ray.position, resB[2])
-            if distanceB1 < distanceB2:
-                pointB = resB[1]
-                normB = resB[3]
-            else:
-                pointB = resB[2]
-                normB = resB[4]
-        elif (resB[1] is not None):
-            pointB = resB[1]
-            normB = resB[3]
-        else:
-            pointB = None
+        # since resA is a hit, get tA_min
+        pointA, normA = helper_findMinRes(resA, ray)
 
+        # since resB is a hit, get tB_min
+        pointB, normB = helper_findMinRes(resB, ray)
+
+        # get int pt for UNION: min(tA_min, tB_min)
         if (pointA is not None) and (pointB is not None):
             distanceA = distance_between(ray.position, pointA)
             distanceB = distance_between(ray.position, pointB)
@@ -264,48 +266,25 @@ def operCsgUnion(resA, resB, ray):
             intersection_point = None
             normal = None
 
+        # we did it! return
         return intersected, intersection_point, None, normal, None
 
+    # else, if the ray is only hitting primitive A:
     elif resA[0]:
-        # print("hi 2")
-        if (resA[1] is not None) and (resA[2] is not None):
-            distanceA1 = distance_between(ray.position, resA[1])
-            distanceA2 = distance_between(ray.position, resA[2])
-            if distanceA1 < distanceA2:
-                pointA = resA[1]
-                normA = resA[3]
-            else:
-                pointA = resA[2]
-                normA = resA[4]
-        elif (resA[1] is not None):
-            pointA = resA[1]
-            normA = resA[3]
-        else:
-            pointA = None
-        # print(pointA)
-        return True, pointA, None, normA, None
+        intersected = True
+        pointA, normA = helper_findMinRes(resA, ray)
+        return intersected, pointA, None, normA, None
 
+    # else, if the ray is only hitting primitive B:
     elif resB[0]:
-        if (resB[1] is not None) and (resB[2] is not None):
-            distanceB1 = distance_between(ray.position, resB[1])
-            distanceB2 = distance_between(ray.position, resB[2])
-            if distanceB1 < distanceB2:
-                pointB = resB[1]
-                normB = resB[3]
-            else:
-                pointB = resB[2]
-                normB = resB[4]
-        elif (resB[1] is not None):
-            pointB = resB[1]
-            normB = resB[3]
-        else:
-            pointB = None
-        # print(pointB)
-        return True, pointB, None, normB, None
+        intersected = True
+        pointB, normB = helper_findMinRes(resB, ray)
+        return intersected, pointB, None, normB, None
 
+    # else, we missed everything
     else:
-        # print("hi 4")
-        return False, None, None, None, None
+        intersected = False
+        return intersected, None, None, None, None
 
 
 
