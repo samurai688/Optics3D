@@ -209,25 +209,44 @@ def test_tree_intersect(tree, ray):
             return tree.getRootVal().test_intersect(ray)
 
 
-def helper_findMinRes(res, ray):
-
+def helper_findIntersects(res, ray, mode='nearest'):
     # if res is a hit, get t_min
     if (res[1] is not None) and (res[2] is not None):
         distance1 = distance_between(ray.position, res[1])
         distance2 = distance_between(ray.position, res[2])
-        if distance1 < distance2:
-            point = res[1]
-            norm = res[3]
-        else:
-            point = res[2]
-            norm = res[4]
+        if mode == 'nearest':
+            if distance1 < distance2:
+                point = res[1]
+                normal = res[3]
+                distance = distance1
+            else:
+                point = res[2]
+                normal = res[4]
+                distance = distance2
+        elif mode == 'farthest':
+            if distance1 > distance2:
+                point = res[1]
+                normal = res[3]
+                distance = distance1
+            else:
+                point = res[2]
+                normal = res[4]
+                distance = distance2
     elif (res[1] is not None):
+        distance1 = distance_between(ray.position, res[1])
         point = res[1]
-        norm = res[3]
+        normal = res[3]
+        distance = distance1
+    elif (res[2] is not None):
+        distance2 = distance_between(ray.position, res[1])
+        point = res[2]
+        normal = res[4]
+        distance = distance2
     else:
         point = None
-        norm = None
-    return point, norm
+        normal = None
+        distance = None
+    return point, normal, distance
 
 
 def operCsgUnion(resA, resB, ray):
@@ -236,32 +255,30 @@ def operCsgUnion(resA, resB, ray):
     # e.g. "True, int-pt1, int-pt2, norm1, norm2"   if the ray intersects twice, goes in and out
     # UNION: min(tA_min, tB_min)
     intersected = False
-    normB = None
-    normA = None
+    normalB = None
+    normalA = None
 
     # if the ray is hitting both primitives:
     if resA[0] and resB[0]:
         intersected = True
 
         # since resA is a hit, get tA_min
-        pointA, normA = helper_findMinRes(resA, ray)
+        pointA, normalA, distanceA = helper_findIntersects(resA, ray, mode='nearest')
 
         # since resB is a hit, get tB_min
-        pointB, normB = helper_findMinRes(resB, ray)
+        pointB, normalB, distanceB = helper_findIntersects(resB, ray, mode='nearest')
 
         # get int pt for UNION: min(tA_min, tB_min)
         if (pointA is not None) and (pointB is not None):
-            distanceA = distance_between(ray.position, pointA)
-            distanceB = distance_between(ray.position, pointB)
             if distanceA < distanceB:
                 intersection_point = pointA
-                normal = normA
+                normal = normalA
             else:
                 intersection_point = pointB
-                normal = normB
+                normal = normalB
         elif (pointA is not None):
             intersection_point = pointA
-            normal = normA
+            normal = normalA
         else:
             intersection_point = None
             normal = None
@@ -272,14 +289,14 @@ def operCsgUnion(resA, resB, ray):
     # else, if the ray is only hitting primitive A:
     elif resA[0]:
         intersected = True
-        pointA, normA = helper_findMinRes(resA, ray)
-        return intersected, pointA, None, normA, None
+        pointA, normalA, distanceA = helper_findIntersects(resA, ray, mode='nearest')
+        return intersected, pointA, None, normalA, None
 
     # else, if the ray is only hitting primitive B:
     elif resB[0]:
         intersected = True
-        pointB, normB = helper_findMinRes(resB, ray)
-        return intersected, pointB, None, normB, None
+        pointB, normalB, distanceB = helper_findIntersects(resB, ray, mode='nearest')
+        return intersected, pointB, None, normalB, None
 
     # else, we missed everything
     else:
@@ -288,8 +305,95 @@ def operCsgUnion(resA, resB, ray):
 
 
 
-def operCsgIntersect(res1, res2):
-    return "( " + str(tree1) + " n " + str(tree2) + " )"
+def operCsgIntersect(resA, resB, ray):
+    # magic internet pseudocode:
+    #   "First time in A and B"
+    #
 
-def operCsgDifference(res1, res2):
-    return "( " + str(tree1)  + " \ " + str(tree2) + " )"
+    print('hi')
+    print(resA)
+    print(resB)
+    print(ray)
+
+    # if the ray is hitting both primitives:
+    if resA[0] and resB[0]:
+        intersected = True
+
+        pointA_near, normalA_near, distanceA_near = helper_findIntersects(resA, ray, mode='nearest')
+        pointB_near, normalB_near, distanceB_near = helper_findIntersects(resB, ray, mode='nearest')
+        pointA_far, normalA_far, distanceA_far = helper_findIntersects(resA, ray, mode='farthest')
+        pointB_far, normalB_far, distanceB_far = helper_findIntersects(resB, ray, mode='farthest')
+        # take THAT for data
+
+        # from the magic internet pseudocode:
+        if ((distanceA_near < distanceB_near) and (distanceA_far > distanceB_near)):
+            return intersected, pointB_near, None, normalB_near, None
+        elif ((distanceB_near < distanceA_near) and (distanceB_far > distanceA_near)):
+            return intersected, pointA_near, None, normalA_near, None
+        else:
+            # I don't know if it can even reach here, but whatever, lets just put something
+            print("alert: something weird happening in operCsgIntersect")
+            intersected = False
+            return intersected, None, None, None, None
+
+    # else, if the ray is only hitting primitive A, for intersect this is a miss:
+    elif resA[0]:
+        intersected = False
+        return intersected, None, None, None, None
+
+    # else, if the ray is only hitting primitive B, for intersect this is a miss:
+    elif resB[0]:
+        intersected = False
+        return intersected, None, None, None, None
+
+    # else, we missed everything
+    else:
+        intersected = False
+        return intersected, None, None, None, None
+
+
+
+def operCsgDifference(resA, resB, ray):
+    # magic internet pseudocode:
+    #   "First time in A not in B"
+    #
+    # the order is important for this one:  we are doing A - B
+    #
+
+
+    # if the ray is hitting both primitives:
+    if resA[0] and resB[0]:
+        intersected = True
+
+        pointA_near, normalA_near, distanceA_near = helper_findIntersects(resA, ray, mode='nearest')
+        pointB_near, normalB_near, distanceB_near = helper_findIntersects(resB, ray, mode='nearest')
+        pointA_far, normalA_far, distanceA_far = helper_findIntersects(resA, ray, mode='farthest')
+        pointB_far, normalB_far, distanceB_far = helper_findIntersects(resB, ray, mode='farthest')
+        # take THAT for data
+
+        # from the magic internet pseudocode:
+        if distanceA_near < distanceB_near:
+            return intersected, pointA_near, None, normalA_near, None
+        elif distanceB_far < distanceA_far:
+            return intersected, pointB_far, None, normalB_far, None
+        else:
+            # I don't know if it can even reach here, but whatever, lets just put something
+            print("alert: something weird happening in operCsgDifference")
+            intersected = False
+            return intersected, None, None, None, None
+
+    # else, if the ray is only hitting primitive A, for difference A - B this is a hit:
+    elif resA[0]:
+        intersected = True
+        pointA, normalA = helper_findIntersects(resA, ray, mode='nearest')
+        return intersected, pointA, None, normalA, None
+
+    # else, if the ray is only hitting primitive B, for difference A - B this is a miss:
+    elif resB[0]:
+        intersected = False
+        return intersected, None, None, None, None
+
+    # else, we missed everything
+    else:
+        intersected = False
+        return intersected, None, None, None, None
