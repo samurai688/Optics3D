@@ -558,7 +558,7 @@ class Block(Optic):
 
 
 class Ray:
-    def __init__(self, position, direction, wavelength=532, order=0, print_trajectory=False):
+    def __init__(self, position, direction, wavelength=532, order=0, print_trajectory=False, type="normal"):
         self.position = position
         self.direction = unit_vector(direction)
         self.wavelength = wavelength # nm
@@ -567,6 +567,7 @@ class Ray:
         self.point_history.append(position)
         self.print_trajectory = print_trajectory
         self.blocked = False
+        self.type = type
         if self.print_trajectory:
             print(self)
         
@@ -722,9 +723,12 @@ class Ray:
                 self.fly(distance=distance_to_int_optic)
                 distance_remaining -= distance_to_int_optic
                 interaction_count += 1
-                # do it:
-                intersected_optic.do_intersect(self, intersection_pt, intersection_normal, shooting_from_outside)
-                # we did it
+                if self.type == "fairie_fire":
+                    self.blocked = True
+                else:
+                    # do it:
+                    intersected_optic.do_intersect(self, intersection_pt, intersection_normal, shooting_from_outside)
+                    # we did it
         if self.print_trajectory:
             print("--- run complete ---")
 

@@ -45,6 +45,23 @@ for x_val in x_start:
 
 
 
+FF_radius = max_ray_run_distance - 100
+FF_center = np.array([0, y_center, 0])
+N = 1000
+for i in range(N):
+    v = np.array([0, 0, 0])  # initialize so we go into the while loop
+    while np.linalg.norm(v) < .000001:
+        x = np.random.normal()  # random standard normal
+        y = np.random.normal()
+        z = np.random.normal()
+        v = np.array([x, y, z])
+    v = v / np.linalg.norm(v)  # normalize to unit norm
+    v_dir = -v
+    v_ff = FF_center + v * FF_radius # scale and shift to problem
+    Ray_list.append(Ray(v_ff, v_dir, wavelength=532, print_trajectory=False, type="fairie_fire"))
+
+
+
 for ray in Ray_list:
     ray.run(max_distance=max_ray_run_distance, optic_list=Optic_list)
 
@@ -56,7 +73,10 @@ fig = plt.figure()
 ax = plt.axes()
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
-    ax.plot(ray_history[:, 1], ray_history[:, 2], "-r")
+    if ray.type == "normal":
+        ax.plot(ray_history[:, 1], ray_history[:, 2], "-r")
+    elif ray.type == "fairie_fire":
+        ax.plot(ray_history[1:, 1], ray_history[1:, 2], "ob", MarkerSize=1)
 
 
 
@@ -69,7 +89,10 @@ for optic in Optic_list:
     optic.draw(ax, view="3d")
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
-    ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+    if ray.type == "normal":
+        ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+    elif ray.type == "fairie_fire":
+        ax.plot(ray_history[1:, 0], ray_history[1:, 1], ray_history[1:, 2], "ob", MarkerSize=0.5)
 
 ax.set_xlabel('x')
 ax.set_ylabel('y')
