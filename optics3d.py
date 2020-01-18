@@ -45,27 +45,62 @@ class Optic:
         pass
 
 
+
+
 class Compound(Optic):
-    def __init__(self, tree):
+    def __init__(self, tree, surface_behavior="reflect", index=1.5):
         self.tree = tree;
+        self.surface_behavior = surface_behavior
+        self.index = index
 
     def __repr__(self):
         return ("Compound")
 
     def test_intersect(self, ray):
-        shooting_from_outside = None
-        intersected, pt1, pt2, norm1, norm2 = test_tree_intersect(self.tree, ray)
-        return intersected, pt1, norm1, shooting_from_outside  ## TODO TODO
+        intersected, pt1, pt2, norm1, norm2, intersection_count = test_tree_intersect(self.tree, ray)
+        # if intersection_count is an even number, we're shooting from outside
+        if np.isclose(np.mod(intersection_count, 2), 0): # if even number:
+            shooting_from_outside = True
+        else:
+            shooting_from_outside = False
+        return intersected, pt1, norm1, shooting_from_outside
 
     def do_intersect(self, ray, intersection_pt, intersection_normal, shooting_from_outside):
-        print(f"intersection_pt = {intersection_pt}")
-        print(f"intersection_normal = {intersection_normal}")
-        ray.reflect(reflect_type="specular_flat",
-                    normal=intersection_normal,
-                    intersection_pt=intersection_pt)
+        # (f"intersection_pt = {intersection_pt}")
+        # print(f"intersection_normal = {intersection_normal}")
+        if self.surface_behavior == "reflect":
+            ray.reflect(reflect_type="specular_flat",
+                        normal=intersection_normal,
+                        intersection_pt=intersection_pt)
+        elif self.surface_behavior == "refract":
+            # subscript 1 is the material you are coming from
+            # subscript 2 is the material you are going into
+            # intersection_normal should point toward material you are coming from
+                # made these work for the singlet lens test case, but I think the normal signs need to be figured out
+                # more robustly, ## TODO
+            if shooting_from_outside:
+                eta1 = 1
+                eta2 = self.index
+                int_normal = -intersection_normal
+            else:
+                eta1 = self.index
+                eta2 = 1
+                int_normal = intersection_normal
+            print(f"shooting_from_outside = {shooting_from_outside}")
+            print(f"int_normal = {int_normal}")
+            ray.refract(refract_type="snells_law",
+                        normal=int_normal,
+                        optic=self,
+                        intersection_pt=intersection_pt,
+                        eta1=eta1,
+                        eta2=eta2)
+        else:
+            raise ValueError("Unknown value for surface_behavior")
 
     def draw(self, ax, view="3d"):
         pass
+
+
 
 
 class Mirror(Optic):
@@ -302,7 +337,12 @@ class Lens(Optic):
             for surface in self.surfaces:
                 intersected_sphere = False
                 if isinstance(surface, Sphere):  # check for intersection with the sphere
-                    intersected_sphere, int_pt_sphere1, int_pt_sphere2, norm1, norm2, shooting_from_outside = surface.test_intersect(ray)
+                    intersected_sphere, int_pt_sphere1, int_pt_sphere2, norm1, norm2, intersection_count = surface.test_intersect(ray)
+                    # if intersection_count is an even number, we're shooting from outside
+                    if np.isclose(np.mod(intersection_count, 2), 0):  # if even number:
+                        shooting_from_outside = True
+                    else:
+                        shooting_from_outside = False
                 if intersected_sphere:
                     intersected = True
                     distance_to_surface = distance_between(ray.position, int_pt_sphere1)
@@ -584,6 +624,7 @@ class Ray:
                                  normal=normal,
                                  intersection_pt=intersection_pt)
 
+            print("TIR: " + str(do_total_internal_reflection))
             if not do_total_internal_reflection:
                 t = (eta1 / eta2) * i + ((eta1 / eta2) * cos_theta_incident - np.sqrt(1 - sin_squared_theta_transmitted)) * n
                 self.direction = t

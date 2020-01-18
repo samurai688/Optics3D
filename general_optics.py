@@ -204,13 +204,14 @@ def test_tree_intersect(tree, ray):
         res1 = test_tree_intersect(tree.getLeftChild(), ray)
         res2 = test_tree_intersect(tree.getRightChild(), ray)
         if res1 and res2:
+            # if we are at an interior node, do the specified boolean on the child nodes
             return opers[tree.getRootVal()](res1, res2, ray)
         else:
+            # if we are at a leaf node, test intersect with that primitive:
             return tree.getRootVal().test_intersect(ray)
 
 
 def helper_findIntersects(res, ray, mode='nearest'):
-    # if res is a hit, get t_min
     if (res[1] is not None) and (res[2] is not None):
         distance1 = distance_between(ray.position, res[1])
         distance2 = distance_between(ray.position, res[2])
@@ -232,41 +233,48 @@ def helper_findIntersects(res, ray, mode='nearest'):
                 point = res[2]
                 normal = res[4]
                 distance = distance2
+        number_of_intersections = 2
     elif (res[1] is not None):
         distance1 = distance_between(ray.position, res[1])
         point = res[1]
         normal = res[3]
         distance = distance1
+        number_of_intersections = 1
     elif (res[2] is not None):
         distance2 = distance_between(ray.position, res[1])
         point = res[2]
         normal = res[4]
         distance = distance2
+        number_of_intersections = 1
     else:
         point = None
         normal = None
         distance = None
-    return point, normal, distance
+        number_of_intersections = 0
+    return point, normal, distance, number_of_intersections
 
 
 def operCsgUnion(resA, resB, ray):
-    # have two inputs of syntax: intersected, int-pt1, int-pt2, norm1, norm2    (None if none)
-    # e.g.  "False, None, None, None, None"    if there's no intersect with that primitive
-    # e.g. "True, int-pt1, int-pt2, norm1, norm2"   if the ray intersects twice, goes in and out
+    # res's are results of the primitive shapes test_intersect methods
+    # have two inputs of syntax: intersected, int-pt1, int-pt2, norm1, norm2, intersection_count    (None if none)
+    # e.g.  "False, None, None, None, None, 0"    if there's no intersection with that primitive
+    # e.g. "True, int-pt1, int-pt2, norm1, norm2, 2"   if the ray intersects twice, goes in and out
     # UNION: min(tA_min, tB_min)
+    # always add up the intersect counts
     intersected = False
     normalB = None
     normalA = None
+    intersection_count_total = resA[5] + resB[5]
 
     # if the ray is hitting both primitives:
     if resA[0] and resB[0]:
         intersected = True
 
         # since resA is a hit, get tA_min
-        pointA, normalA, distanceA = helper_findIntersects(resA, ray, mode='nearest')
+        pointA, normalA, distanceA, number_intersectionsA = helper_findIntersects(resA, ray, mode='nearest')
 
         # since resB is a hit, get tB_min
-        pointB, normalB, distanceB = helper_findIntersects(resB, ray, mode='nearest')
+        pointB, normalB, distanceB, number_intersectionsB = helper_findIntersects(resB, ray, mode='nearest')
 
         # get int pt for UNION: min(tA_min, tB_min)
         if (pointA is not None) and (pointB is not None):
@@ -284,24 +292,24 @@ def operCsgUnion(resA, resB, ray):
             normal = None
 
         # we did it! return
-        return intersected, intersection_point, None, normal, None
+        return intersected, intersection_point, None, normal, None, intersection_count_total
 
     # else, if the ray is only hitting primitive A:
     elif resA[0]:
         intersected = True
-        pointA, normalA, distanceA = helper_findIntersects(resA, ray, mode='nearest')
-        return intersected, pointA, None, normalA, None
+        pointA, normalA, distanceA, number_intersectionsA = helper_findIntersects(resA, ray, mode='nearest')
+        return intersected, pointA, None, normalA, None, intersection_count_total
 
     # else, if the ray is only hitting primitive B:
     elif resB[0]:
         intersected = True
-        pointB, normalB, distanceB = helper_findIntersects(resB, ray, mode='nearest')
-        return intersected, pointB, None, normalB, None
+        pointB, normalB, distanceB, number_intersectionsB = helper_findIntersects(resB, ray, mode='nearest')
+        return intersected, pointB, None, normalB, None, intersection_count_total
 
     # else, we missed everything
     else:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total
 
 
 
@@ -310,46 +318,90 @@ def operCsgIntersect(resA, resB, ray):
     #   "First time in A and B"
     #
 
-    print('hi')
-    print(resA)
-    print(resB)
-    print(ray)
+    # um, not sure about the intersection count logic here, might be right might not be ## TODO
+    intersection_count_total = resA[5] + resB[5]
+
 
     # if the ray is hitting both primitives:
     if resA[0] and resB[0]:
         intersected = True
 
-        pointA_near, normalA_near, distanceA_near = helper_findIntersects(resA, ray, mode='nearest')
-        pointB_near, normalB_near, distanceB_near = helper_findIntersects(resB, ray, mode='nearest')
-        pointA_far, normalA_far, distanceA_far = helper_findIntersects(resA, ray, mode='farthest')
-        pointB_far, normalB_far, distanceB_far = helper_findIntersects(resB, ray, mode='farthest')
+        pointA_near, normalA_near, distanceA_near, number_intersectionsA = helper_findIntersects(resA, ray, mode='nearest')
+        pointB_near, normalB_near, distanceB_near, number_intersectionsB = helper_findIntersects(resB, ray, mode='nearest')
+        pointA_far, normalA_far, distanceA_far, number_intersectionsA = helper_findIntersects(resA, ray, mode='farthest')
+        pointB_far, normalB_far, distanceB_far, number_intersectionsB = helper_findIntersects(resB, ray, mode='farthest')
         # take THAT for data
 
-        # from the magic internet pseudocode:
-        if ((distanceA_near < distanceB_near) and (distanceA_far > distanceB_near)):
-            return intersected, pointB_near, None, normalB_near, None
-        elif ((distanceB_near < distanceA_near) and (distanceB_far > distanceA_near)):
-            return intersected, pointA_near, None, normalA_near, None
+        # print(f"distanceA_near = {distanceA_near}")
+        # print(f"distanceB_near = {distanceB_near}")
+        # print(f"distanceA_far = {distanceA_far}")
+        # print(f"distanceB_far = {distanceB_far}")
+
+        # if both numbers are even, we are hitting both things from the outside
+        if np.isclose(np.mod(number_intersectionsA, 2), 0) and np.isclose(np.mod(number_intersectionsB, 2), 0):
+            # from the magic internet pseudocode:
+            if ((distanceA_near < distanceB_near) and (distanceA_far > distanceB_near)):
+                return intersected, pointB_near, None, normalB_near, None, intersection_count_total
+            elif ((distanceB_near < distanceA_near) and (distanceB_far > distanceA_near)):
+                return intersected, pointA_near, None, normalA_near, None, intersection_count_total
+            else:
+                # I don't think it's supposed to reach here, but whatever, lets just put something
+                print("alert: something weird happening in operCsgIntersect")
+                intersected = False
+                return intersected, None, None, None, None, intersection_count_total
+        # if A is even and B is odd, we are outside A and we are inside B
+        elif np.isclose(np.mod(number_intersectionsA, 2), 0):
+            # both the B distances (_near, _far) returned from our helper should be the same
+            distanceB = distanceB_near
+            # if the B intersection is nearer than both the A intersections, we exit B before we hit A, so no intersect
+            if ((distanceB < distanceA_near) and (distanceB < distanceA_far)):
+                intersected = False
+                return intersected, None, None, None, None, intersection_count_total
+            else:
+                print("unhandled in operCsgIntersect")
+                pass # TODO
+        # if B is even and A is odd, we are outside B and we are inside A
+        elif np.isclose(np.mod(number_intersectionsB, 2), 0):
+            # both the A distances (_near, _far) returned from our helper should be the same
+            distanceA = distanceA_near
+            # if the A intersection is nearer than both the B intersections, we exit A before we hit B, so no intersect
+            if ((distanceA < distanceB_near) and (distanceA < distanceB_far)):
+                intersected = False
+                return intersected, None, None, None, None, intersection_count_total
+            else:
+                print("unhandled in operCsgIntersect")
+                pass # TODO
+        # if A and B are both odd, we are inside both A and B
         else:
-            # I don't know if it can even reach here, but whatever, lets just put something
-            print("alert: something weird happening in operCsgIntersect")
-            intersected = False
-            return intersected, None, None, None, None
+            # in this case, each one gives odd intersection counts, so it'll say we're inside, but we're not...
+            # this is probably a sign of big trouble, but for now let me just put a plus one in here ## TODO
+            intersection_count_total += 1
+            # so we just need to take the nearest intersection
+            # both the A and B distances (_near, _far) returned from our helper should be the same
+            distanceA = distanceA_near
+            distanceB = distanceB_near
+            if distanceA < distanceB:
+                intersected = True
+                return intersected, pointA_near, None, normalA_near, None, intersection_count_total
+            else:
+                intersected = True
+                return intersected, pointB_near, None, normalB_near, None, intersection_count_total
+
 
     # else, if the ray is only hitting primitive A, for intersect this is a miss:
     elif resA[0]:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total
 
     # else, if the ray is only hitting primitive B, for intersect this is a miss:
     elif resB[0]:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total
 
     # else, we missed everything
     else:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total
 
 
 
@@ -360,40 +412,42 @@ def operCsgDifference(resA, resB, ray):
     # the order is important for this one:  we are doing A - B
     #
 
+    # um, not sure about the intersection count logic here, might be right might not be ## TODO
+    intersection_count_total = resA[5] + resB[5]
 
     # if the ray is hitting both primitives:
     if resA[0] and resB[0]:
         intersected = True
 
-        pointA_near, normalA_near, distanceA_near = helper_findIntersects(resA, ray, mode='nearest')
-        pointB_near, normalB_near, distanceB_near = helper_findIntersects(resB, ray, mode='nearest')
-        pointA_far, normalA_far, distanceA_far = helper_findIntersects(resA, ray, mode='farthest')
-        pointB_far, normalB_far, distanceB_far = helper_findIntersects(resB, ray, mode='farthest')
+        pointA_near, normalA_near, distanceA_near, number_intersectionsA = helper_findIntersects(resA, ray, mode='nearest')
+        pointB_near, normalB_near, distanceB_near, number_intersectionsB = helper_findIntersects(resB, ray, mode='nearest')
+        pointA_far, normalA_far, distanceA_far, number_intersectionsA = helper_findIntersects(resA, ray, mode='farthest')
+        pointB_far, normalB_far, distanceB_far, number_intersectionsB = helper_findIntersects(resB, ray, mode='farthest')
         # take THAT for data
 
         # from the magic internet pseudocode:
         if distanceA_near < distanceB_near:
-            return intersected, pointA_near, None, normalA_near, None
+            return intersected, pointA_near, None, normalA_near, None, intersection_count_total
         elif distanceB_far < distanceA_far:
-            return intersected, pointB_far, None, normalB_far, None
+            return intersected, pointB_far, None, normalB_far, None, intersection_count_total
         else:
             # I don't know if it can even reach here, but whatever, lets just put something
             print("alert: something weird happening in operCsgDifference")
             intersected = False
-            return intersected, None, None, None, None
+            return intersected, None, None, None, None, intersection_count_total
 
     # else, if the ray is only hitting primitive A, for difference A - B this is a hit:
     elif resA[0]:
         intersected = True
         pointA, normalA = helper_findIntersects(resA, ray, mode='nearest')
-        return intersected, pointA, None, normalA, None
+        return intersected, pointA, None, normalA, None, intersection_count_total
 
     # else, if the ray is only hitting primitive B, for difference A - B this is a miss:
     elif resB[0]:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total
 
     # else, we missed everything
     else:
         intersected = False
-        return intersected, None, None, None, None
+        return intersected, None, None, None, None, intersection_count_total

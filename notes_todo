@@ -170,8 +170,37 @@
         eh, let's just try to add in intersect and difference, that way we can combine them all and see all the bugs
         okay well they're in there
         need to clean up some of the tests maybe before trying to test and get the deep bugs out
+        some things that will be issues:
+            how do we tell the compound shapes what surface behavior they have (reflective, refractive, etc)?
+            when we union two shapes with different indices, what is the index of the intermediate space?
 
+        right now the compounds are made out of primitive shapes and everything defaults to specular reflective
+        it might better to have the compounds be made out of optics, because they already know what their behavior is
+        hmmmmmmm
+        right now, the Optic class, has a bunch of children (Mirror, Lens, etc) that all kind of do similar things,
+          they own a list of shapes
+          they take a "shape" string argument that effectively decides if its 2d or 3d, what the shape is
+          in the do_intersect method they say what the surface behavior is
+          they handle intersections and draw themselves
+        it's a mess
+        maybe the optic class should own a tree of all the shapes involved in it, instead of the list thing
+        and it should police the high-level, decide on surface behavior, index overlaps, and stuff like that
+        it will go to the shapes to find the intersect points, and then be able to do the behavior
+        yeah
+        okay so right now only the Compound class owns a tree
+        okay, so all we have to do tell the compound class what wwe want the behavior to be, and that's consistent
+        with our model, kind of (I doubt there is supposed to be a separate compound class at the end of the day).
 
+        okay, well that was fun, put in an example of a spherical singlet lens, as a tree-intersect, with refract.
+          sweet...
+          it works but has issues
+          first of all, figuring out the normal directions in snell's law, need to solve that, right now I just flipped
+          the signs to make it work.
+          next of all, the method of keeping track of whether we're inside by counting number of intersections, seems
+          to have issues with the non-counting of zero-grazing-intersects.
+          See the TODO's for these issues
+
+          
 
 
 

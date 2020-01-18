@@ -124,8 +124,8 @@ class Sphere(Shape):
         vDotQ = np.dot(ray.direction, q)
         squareDiffs = np.dot(q, q) - self.R * self.R
         discrim = vDotQ * vDotQ - squareDiffs
-        shooting_from_outside = True
-        if discrim > 0:  # line intersects in two points
+        intersection_count = 0
+        if discrim > 0:  # line (not necessarily the ray) intersects in two points
             root = np.sqrt(discrim)
             t0 = (vDotQ - root)
             t1 = (vDotQ + root)
@@ -133,31 +133,37 @@ class Sphere(Shape):
             pt1 = ray.position + t1 * ray.direction
             norm0 = self.normal(pt0)
             norm1 = self.normal(pt1)
+
+            print(f"        t0 = {t0}")
+            print(f"        t1 = {t1}")
             # If both t are positive, ray is facing the sphere and intersecting
             # If one t is positive one t is negative, ray is shooting from inside
             # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
             # So we have to return the smaller and positive t as the intersecting distance for the ray
             if t0 > INTERSECT_CLIPPING_FLOOR and t1 > INTERSECT_CLIPPING_FLOOR:
+                intersection_count = 2
                 if t0 < t1:
-                    return True, pt1, pt0, norm1, norm0, shooting_from_outside
+                    return True, pt1, pt0, norm1, norm0, intersection_count
                 else:
-                    return True, pt0, pt1, norm0, norm1, shooting_from_outside
+                    return True, pt0, pt1, norm0, norm1, intersection_count
             elif t1 > INTERSECT_CLIPPING_FLOOR:
-                shooting_from_outside = False
-                return True, pt1, None, norm1, None, shooting_from_outside
+                intersection_count = 1
+                return True, pt1, None, norm1, None, intersection_count
             elif t0 > INTERSECT_CLIPPING_FLOOR:
-                shooting_from_outside = False
-                return True, pt0, None, norm0, None, shooting_from_outside
+                intersection_count = 1
+                return True, pt0, None, norm0, None, intersection_count
             else:
-                return False, None, None, None, None, shooting_from_outside
+                intersection_count = 0
+                return False, None, None, None, None, intersection_count
         elif discrim == 0:  # line intersects in one point, tangent
             t0 = vDotQ
             pt0 = ray.position + t0 * ray.direction
             norm0 = self.normal(pt0)
-            return True, pt0, None, norm0, None, shooting_from_outside
-
+            intersection_count = 2 # ugh, I'm counting this case as two cause you're probably outside, give me a break
+            return True, pt0, None, norm0, None, intersection_count
         else:  # discrim < 0   # line does not intersect
-            return False, None, None, None, None, shooting_from_outside
+            intersection_count = 0
+            return False, None, None, None, None, intersection_count
 
 
 class Rectangle(Shape):

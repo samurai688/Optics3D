@@ -27,7 +27,7 @@ mirror2 = Sphere(mirror2_pos, D=30)
 mirrorCOMPOUNDtree = BinaryTree("intersect")
 mirrorCOMPOUNDtree.insertLeft(mirror1)
 mirrorCOMPOUNDtree.insertRight(mirror2)
-mirrorCOMPOUND = Compound(mirrorCOMPOUNDtree)
+mirrorCOMPOUND = Compound(mirrorCOMPOUNDtree, surface_behavior="reflect", index=1.5)
 
 
 Optic_list = []

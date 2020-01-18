@@ -14,7 +14,7 @@ plt.close("all")
 
 lens_center = np.array([0, 100, 0])
 
-lens1 = Lens(lens_center, shape="spherical", D=50, thinlens=False, index=0.5)
+lens1 = Lens(lens_center, shape="spherical", D=50, thinlens=False, index=1.5)
 Optic_list = []
 Optic_list.append(lens1)
 
@@ -34,6 +34,17 @@ for x_val in x_start:
 
 for ray in Ray_list:
     ray.run(max_distance=max_ray_run_distance, optic_list=Optic_list)
+
+
+
+
+# 2d plots
+fig = plt.figure()
+ax = plt.axes()
+for ray in Ray_list:
+    ray_history = ray.get_plot_repr()
+    ax.plot(ray_history[:, 1], ray_history[:, 2], "-r")
+
 
 
 # 3d plots
