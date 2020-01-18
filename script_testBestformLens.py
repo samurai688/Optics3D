@@ -15,13 +15,15 @@ from general import set_axes_equal
 from general_optics import BinaryTree
 plt.close("all")
 
-y_center = 400
-r1 = 102.4
-center_thick = 3.6
+# this dimensions not precisely right but it does seem slightly better than the singlet already
+y_center = 800
+center_thick = 4.0
+r1 = 60.02
+r2 = 353.30
 ball1_pos = np.array([0, y_center + r1 - center_thick/2, 0])
-ball2_pos = np.array([0, y_center - r1 + center_thick/2, 0])
+ball2_pos = np.array([0, y_center - r2 + center_thick/2, 0])
 lens1 = Sphere(ball1_pos, D=r1*2)
-lens2 = Sphere(ball2_pos, D=r1*2)
+lens2 = Sphere(ball2_pos, D=r2*2)
 
 lensCOMPOUNDtree = BinaryTree("intersect")
 lensCOMPOUNDtree.insertLeft(lens1)
@@ -31,7 +33,7 @@ lensCOMPOUND = Compound(lensCOMPOUNDtree, surface_behavior="refract", index=1.51
 Optic_list = []
 Optic_list.append(lensCOMPOUND)
 
-max_ray_run_distance = 550
+max_ray_run_distance = 950
 
 x_start = [0]
 y_start = [0]

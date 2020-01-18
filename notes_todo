@@ -198,9 +198,11 @@
           the signs to make it work.
           next of all, the method of keeping track of whether we're inside by counting number of intersections, seems
           to have issues with the non-counting of zero-grazing-intersects.
+          also, starting from inside a sphere can cause a crash due to unhandled cases (can come up especially if you
+          have a large radius-of-curvature surface.)
           See the TODO's for these issues
 
-          
+
 
 
 
