@@ -89,7 +89,7 @@ for catalog_name, grating in grating_data.items():
     plt.xlabel("x (mm)")
     plt.ylabel("y (mm)")
 
-    plt.savefig(catalog_name + ".pdf", format="pdf")
+    plt.savefig("grating diagrams/" + catalog_name + ".pdf", format="pdf")
     plt.close()
 
 # 1,3,6,7,9,12,13,18

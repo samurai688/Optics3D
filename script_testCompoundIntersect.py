@@ -7,7 +7,7 @@ Created on Sat Dec  29
 """
 
 import numpy as np
-from optics3d import Ray, Compound
+from optics3d import Ray, Compound, add_faerie_fire_rays
 import matplotlib.pyplot as plt
 from Shapes.shapes import Sphere
 from general import set_axes_equal
@@ -18,10 +18,11 @@ max_ray_run_distance = 150 # mm
 
 
 
-mirror1_pos = np.array([0, 60, 0])
-mirror2_pos = np.array([0, 40, 0])
-mirror1 = Sphere(mirror1_pos, D=30)
-mirror2 = Sphere(mirror2_pos, D=30)
+center_pos = np.array([0, 50, 0])
+mirror1_pos = np.array([0, 80, 0])
+mirror2_pos = np.array([0, 20, 0])
+mirror1 = Sphere(mirror1_pos, D=65)
+mirror2 = Sphere(mirror2_pos, D=65)
 
 
 mirrorCOMPOUNDtree = BinaryTree("intersect")
@@ -33,22 +34,11 @@ mirrorCOMPOUND = Compound(mirrorCOMPOUNDtree, surface_behavior="reflect", index=
 Optic_list = []
 Optic_list.append(mirrorCOMPOUND)
 
-
 Ray_list = []
-ray_z = np.linspace(0, 0, 1)
-ray_x = np.linspace(-50, 50, 51)
-for x_ix, x_val in enumerate(ray_x):
-    for z_ix, z_val in enumerate(ray_z):
-        ray_pos = np.array([x_val, 0, z_val])
-        ray_dir = np.array([0, 1, 0])
-        ray = Ray(ray_pos, ray_dir, wavelength=532, print_trajectory=False)
-        Ray_list.append(ray)
-for x_ix, x_val in enumerate(ray_x):
-    for z_ix, z_val in enumerate(ray_z):
-        ray_pos = np.array([x_val, 100, z_val])
-        ray_dir = np.array([0, -1, 0])
-        ray = Ray(ray_pos, ray_dir, wavelength=532, print_trajectory=False)
-        Ray_list.append(ray)
+
+FF_radius = max_ray_run_distance - 50
+FF_center = center_pos
+Ray_list = add_faerie_fire_rays(Ray_list, FF_radius, FF_center)
 
 
 for ray in Ray_list:
@@ -63,7 +53,10 @@ ax = plt.axes(projection='3d')
 
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
-    ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+    if ray.type == "normal":
+        ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+    elif ray.type == "faerie_fire":
+        ax.plot(ray_history[1:, 0], ray_history[1:, 1], ray_history[1:, 2], "ob", MarkerSize=0.5)
 for optic in Optic_list:
     optic.draw(ax, view="3d")
 

@@ -223,6 +223,8 @@
             - right now it returns the optic index, and can't have indices for the individual shapes / primitives
           architecture thinking needed on these issues
 
+          let's clean up and test-ify stuff a bit
+
 
 
 
