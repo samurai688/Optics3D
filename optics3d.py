@@ -24,8 +24,7 @@ INDEX_OF_THE_WORLD = 1.0000000
 
 
 # faerie fire function aka the world's worst 3d graphics
-def add_faerie_fire_rays(Ray_list, FF_radius, FF_center):
-    N = 1000
+def add_faerie_fire_rays(Ray_list, FF_radius, FF_center, N=1000):
     for i in range(N):
         v = np.array([0, 0, 0])  # initialize so we go into the while loop
         while np.linalg.norm(v) < .000001:
@@ -676,8 +675,7 @@ class Ray:
                     self.reflect(reflect_type="specular_flat",
                                  normal=normal,
                                  intersection_pt=intersection_pt)
-
-            print("TIR: " + str(do_total_internal_reflection))
+            # print("TIR: " + str(do_total_internal_reflection))
             if not do_total_internal_reflection:
                 t = (eta1 / eta2) * i + ((eta1 / eta2) * cos_theta_incident - np.sqrt(1 - sin_squared_theta_transmitted)) * n
                 self.direction = t
