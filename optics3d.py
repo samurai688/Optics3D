@@ -9,7 +9,7 @@ Created on Sat Dec  8 23:10:35 2018
 import numpy as np
 from general import to_precision
 from general_optics import unit_vector, angle_between, distance_between, pathpatch_2d_to_3d, pathpatch_translate, \
-    rotation_matrix_axis_angle, project_onto_plane, postOrderEval, test_tree_intersect
+    rotation_matrix_axis_angle, project_onto_plane, postOrderEval, test_tree_intersect, test_tree_point
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Circle as mplCircle
 from matplotlib.patches import Rectangle as mplRectangle
@@ -20,6 +20,38 @@ from Shapes.shapes import Rectangle, Disc, Sphere
 
 
 INTERSECT_CLIPPING_FLOOR = 1e-12
+INDEX_OF_THE_WORLD = 1.0000000
+
+
+# faerie fire function aka the world's worst 3d graphics
+def add_faerie_fire_rays(Ray_list, FF_radius, FF_center):
+    N = 1000
+    for i in range(N):
+        v = np.array([0, 0, 0])  # initialize so we go into the while loop
+        while np.linalg.norm(v) < .000001:
+            x = np.random.normal()  # random standard normal
+            y = np.random.normal()
+            z = np.random.normal()
+            v = np.array([x, y, z])
+        v = v / np.linalg.norm(v)  # normalize to unit norm
+        v_dir = -v
+        v_ff = FF_center + v * FF_radius # scale and shift to problem
+        Ray_list.append(Ray(v_ff, v_dir, wavelength=532, print_trajectory=False, type="faerie_fire"))
+    return Ray_list
+
+
+# test the whole world
+def get_index_at_point(Optic_list, point):
+    for optic in Optic_list:
+        index = optic.get_index_at_point_if_inside(point)
+        if index is not None:
+            return index
+    return INDEX_OF_THE_WORLD
+
+
+
+
+
 
 
 class Optic:
@@ -42,6 +74,9 @@ class Optic:
         return ray
 
     def draw(self, ax, view="3d"):
+        pass
+
+    def get_index_at_point_if_inside(self, point):
         pass
 
 
@@ -75,19 +110,17 @@ class Compound(Optic):
         elif self.surface_behavior == "refract":
             # subscript 1 is the material you are coming from
             # subscript 2 is the material you are going into
-            # intersection_normal should point toward material you are coming from
-                # made these work for the singlet lens test case, but I think the normal signs need to be figured out
-                # more robustly, ## TODO
-            if shooting_from_outside:
-                eta1 = 1
+            # intersection_normal direction should get fixed in ray.refract
+            optic_index = self.get_index_at_point_if_inside(intersection_pt + 1e-8 * ray.direction)
+            if optic_index is not None:
+                eta1 = INDEX_OF_THE_WORLD
                 eta2 = self.index
-                int_normal = -intersection_normal
             else:
                 eta1 = self.index
-                eta2 = 1
-                int_normal = intersection_normal
-            print(f"shooting_from_outside = {shooting_from_outside}")
-            print(f"int_normal = {int_normal}")
+                eta2 = INDEX_OF_THE_WORLD
+            int_normal = intersection_normal
+            # print(f"shooting_from_outside = {shooting_from_outside}")
+            # print(f"int_normal = {int_normal}")
             ray.refract(refract_type="snells_law",
                         normal=int_normal,
                         optic=self,
@@ -96,6 +129,13 @@ class Compound(Optic):
                         eta2=eta2)
         else:
             raise ValueError("Unknown value for surface_behavior")
+
+    def get_index_at_point_if_inside(self, point):
+        inside_final_optic = test_tree_point(self.tree, point)
+        if inside_final_optic:
+            return self.index
+        else:
+            return None
 
     def draw(self, ax, view="3d"):
         pass
@@ -609,12 +649,24 @@ class Ray:
             # subscript 1 is the material you are coming from
             # subscript 2 is the material you are going into
             # eta is index of refraction
+            #
             # surface normal should face toward material you are coming from
             #
 
             do_total_internal_reflection = False
             i = self.direction
             n = normal
+
+            # okay
+            # let's just try to flip the normal in here so that it's right to prevent all these issues
+            # I see no way this could go poorly
+            # so, the angle between the ray direction and the normal should be more than 90 right? that's what it is?
+            # If the angle between A and B are greater than 90 degrees, the dot product will be negative, if not flip n
+            if np.dot(i, n) < 0:
+                pass
+            else:
+                n = -n
+
             cos_theta_incident = np.dot(-i, n)
             sin_squared_theta_transmitted = (eta1 / eta2) ** 2 * (1 - cos_theta_incident ** 2)
 
@@ -723,7 +775,7 @@ class Ray:
                 self.fly(distance=distance_to_int_optic)
                 distance_remaining -= distance_to_int_optic
                 interaction_count += 1
-                if self.type == "fairie_fire":
+                if self.type == "faerie_fire":
                     self.blocked = True
                 else:
                     # do it:

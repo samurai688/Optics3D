@@ -129,10 +129,20 @@ def pathpatch_translate(pathpatch, delta):
 ######
 
 
+
+
+
+
+
 def project_onto_plane(x, n):
     d = np.dot(x, n) / np.linalg.norm(n)
     p = [d * unit_vector(n)[i] for i in range(len(n))]
     return np.array([x[i] - p[i] for i in range(len(x))])
+
+
+
+
+
 
 
 class BinaryTree:
@@ -198,17 +208,73 @@ def printCsgDifference(res1, res2):
 
 def test_tree_intersect(tree, ray):
     opers = {'union': operCsgUnion, 'difference': operCsgDifference, 'intersect': operCsgIntersect}
-    res1 = None
-    res2 = None
+    resA = None
+    resB = None
     if tree:
-        res1 = test_tree_intersect(tree.getLeftChild(), ray)
-        res2 = test_tree_intersect(tree.getRightChild(), ray)
-        if res1 and res2:
+        resA = test_tree_intersect(tree.getLeftChild(), ray)
+        resB = test_tree_intersect(tree.getRightChild(), ray)
+        if resA is not None and resB is not None:
             # if we are at an interior node, do the specified boolean on the child nodes
-            return opers[tree.getRootVal()](res1, res2, ray)
+            return opers[tree.getRootVal()](resA, resB, ray)
         else:
             # if we are at a leaf node, test intersect with that primitive:
             return tree.getRootVal().test_intersect(ray)
+
+
+def test_tree_point(tree, point):
+    opers = {'union': operCsgIndexUnion, 'difference': operCsgIndexDifference, 'intersect': operCsgIndexIntersect}
+    resA = None
+    resB = None
+    if tree:
+        resA = test_tree_point(tree.getLeftChild(), point)
+        resB = test_tree_point(tree.getRightChild(), point)
+        # print(f"resA = {resA}")
+        # print(f"resB = {resB}")
+        if resA is not None and resB is not None:
+            # if we are at an interior node, do the specified boolean on the child nodes
+            return opers[tree.getRootVal()](resA, resB, point)
+        else:
+            # if we are at a leaf node, test point inside that primitive:
+            # print(tree)
+            # print(tree.getRootVal())
+            return tree.getRootVal().test_point(point)
+    else:
+        return None
+
+
+
+def operCsgIndexUnion(resA, resB, point):
+    if resA and resB:
+        return True
+    elif resA:
+        return True
+    elif resB:
+        return True
+    else:
+        return False
+
+
+def operCsgIndexIntersect(resA, resB, point):
+    if resA and resB:
+        return True
+    elif resA:
+        return False
+    elif resB:
+        return False
+    else:
+        return False
+
+
+def operCsgIndexDifference(resA, resB, point):
+    # the order is important for this one:  we are doing A - B
+    if resA and resB:
+        return False
+    elif resA:
+        return True
+    elif resB:
+        return False
+    else:
+        return False
 
 
 def helper_findIntersects(res, ray, mode='nearest'):
@@ -339,6 +405,7 @@ def operCsgIntersect(resA, resB, ray):
 
         # if both numbers are even, we are hitting both things from the outside
         if np.isclose(np.mod(number_intersectionsA, 2), 0) and np.isclose(np.mod(number_intersectionsB, 2), 0):
+            ######
             # from the magic internet pseudocode:
             if ((distanceA_near < distanceB_near) and (distanceA_far > distanceB_near)):
                 return intersected, pointB_near, None, normalB_near, None, intersection_count_total
@@ -346,31 +413,36 @@ def operCsgIntersect(resA, resB, ray):
                 return intersected, pointA_near, None, normalA_near, None, intersection_count_total
             else:
                 # I don't think it's supposed to reach here, but whatever, lets just put something
-                print("alert: something weird happening in operCsgIntersect")
+                print("alert: something weird happening in operCsgIntersect, case 1")
                 intersected = False
                 return intersected, None, None, None, None, intersection_count_total
+            ######
         # if A is even and B is odd, we are outside A and we are inside B
         elif np.isclose(np.mod(number_intersectionsA, 2), 0):
             # both the B distances (_near, _far) returned from our helper should be the same
             distanceB = distanceB_near
+            pointB = pointB_near
             # if the B intersection is nearer than both the A intersections, we exit B before we hit A, so no intersect
             if ((distanceB < distanceA_near) and (distanceB < distanceA_far)):
                 intersected = False
                 return intersected, None, None, None, None, intersection_count_total
+            # um, okay so if we're inside B and we haven't exited, the next intersection is the near A, right?
             else:
-                print("unhandled in operCsgIntersect")
-                pass # TODO
+                intersected = True
+                return intersected, pointA_near, None, normalA_near, None, intersection_count_total
         # if B is even and A is odd, we are outside B and we are inside A
         elif np.isclose(np.mod(number_intersectionsB, 2), 0):
             # both the A distances (_near, _far) returned from our helper should be the same
             distanceA = distanceA_near
+            pointA = pointA_near
             # if the A intersection is nearer than both the B intersections, we exit A before we hit B, so no intersect
             if ((distanceA < distanceB_near) and (distanceA < distanceB_far)):
                 intersected = False
                 return intersected, None, None, None, None, intersection_count_total
+            # um, okay so if we're inside A and we haven't exited, the next intersection is the near B, right?
             else:
-                print("unhandled in operCsgIntersect")
-                pass # TODO
+                intersected = True
+                return intersected, pointB_near, None, normalB_near, None, intersection_count_total
         # if A and B are both odd, we are inside both A and B
         else:
             # in this case, each one gives odd intersection counts, so it'll say we're inside, but we're not...

@@ -202,7 +202,26 @@
           have a large radius-of-curvature surface.)
           See the TODO's for these issues
 
+        1/19/2020
+          fiddled around a bit more with the lens test case
+          the "shooting_from_outside" system is inadequate, and just flawed
+          it's coded in such a way as to detect where you're inside any of the primitives -- but that's not what's
+          meant for index of refraction, where you need to know what medium you're in and what you're going into
+          this system needs to be totally overhauled and fixed
+          maybe we could make a function that takes a point in space and finds out what its index is, and then have
+          the ray call that to figure out what to do. not super elegant, but the current mess doesn't even work
 
+        1/20/2020
+          Aight, let's try the above mentioned system to find the index of a point
+          I guess the way to do it would be to have each optic have a method to find index of a point
+          And then I guess you can ask the world, and it will ask all the optics, or just ask a specific optic
+            if you're feeling lucky
+          Start with the "compound" Optic, aka the only one that matters eventually
+          okay, cool, it's in there!  Seems to work okay, a little clunky, but better than before.
+          a couple issues
+            - no way to test all optics from the optics module right now
+            - right now it returns the optic index, and can't have indices for the individual shapes / primitives
+          architecture thinking needed on these issues
 
 
 

@@ -8,7 +8,7 @@ Created on Fri Jan 11 21:47:48 2019
 
 
 import numpy as np
-from optics3d import Ray, Lens, Compound
+from optics3d import Ray, Lens, Compound, add_faerie_fire_rays, get_index_at_point
 import matplotlib.pyplot as plt
 from Shapes.shapes import Sphere
 from general import set_axes_equal
@@ -16,7 +16,7 @@ from general_optics import BinaryTree
 plt.close("all")
 
 # this dimensions might not be precisely right but it does seem slightly better than the singlet already
-y_backprinciple = 800
+y_backprinciple = 400
 center_thick = 4.0
 edge_thick = 2.4
 f = 100
@@ -29,6 +29,8 @@ x1_ = r1 - h_ * np.tan(np.arccos(h_ / r1))
 x2_ = r2 - h_ * np.tan(np.arccos(h_ / r2))
 
 
+zero_pos = np.array([0, 0, 0])
+center_pos = np.array([0, y_backprinciple, 0])
 ball1_pos = np.array([0, y_backprinciple + r1 - (center_thick - (f - f_back)), 0])
 ball2_pos = np.array([0, y_backprinciple - r2 + (f - f_back), 0])
 lens1 = Sphere(ball1_pos, D=r1*2)
@@ -42,11 +44,16 @@ lensCOMPOUND = Compound(lensCOMPOUNDtree, surface_behavior="refract", index=1.51
 Optic_list = []
 Optic_list.append(lensCOMPOUND)
 
-max_ray_run_distance = 950
+test_index_of_world = get_index_at_point(Optic_list, zero_pos)
+test_index_of_optic = get_index_at_point(Optic_list, center_pos)
+print(f"test_index_of_world = {test_index_of_world}")
+print(f"test_index_of_optic = {test_index_of_optic}")
+
+max_ray_run_distance = 550
 
 x_start = [0]
 y_start = [0]
-z_start = np.linspace(-10, 10, 21)
+z_start = np.linspace(-25.4/4, 25.4/4, 21)
 
 Ray_list = []
 for x_val in x_start:
@@ -58,20 +65,7 @@ for x_val in x_start:
 
 FF_radius = max_ray_run_distance - 100
 FF_center = np.array([0, y_backprinciple, 0])
-N = 1000
-for i in range(N):
-    v = np.array([0, 0, 0])  # initialize so we go into the while loop
-    while np.linalg.norm(v) < .000001:
-        x = np.random.normal()  # random standard normal
-        y = np.random.normal()
-        z = np.random.normal()
-        v = np.array([x, y, z])
-    v = v / np.linalg.norm(v)  # normalize to unit norm
-    v_dir = -v
-    v_ff = FF_center + v * FF_radius # scale and shift to problem
-    Ray_list.append(Ray(v_ff, v_dir, wavelength=532, print_trajectory=False, type="fairie_fire"))
-
-
+Ray_list = add_faerie_fire_rays(Ray_list, FF_radius, FF_center)
 
 
 for ray in Ray_list:
@@ -87,7 +81,7 @@ for ray in Ray_list:
     ray_history = ray.get_plot_repr()
     if ray.type == "normal":
         ax.plot(ray_history[:, 1], ray_history[:, 2], "-r")
-    elif ray.type == "fairie_fire":
+    elif ray.type == "faerie_fire":
         ax.plot(ray_history[1:, 1], ray_history[1:, 2], "ob", MarkerSize=1)
 
 
@@ -103,7 +97,7 @@ for ray in Ray_list:
     ray_history = ray.get_plot_repr()
     if ray.type == "normal":
         ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
-    elif ray.type == "fairie_fire":
+    elif ray.type == "faerie_fire":
         ax.plot(ray_history[1:, 0], ray_history[1:, 1], ray_history[1:, 2], "ob", MarkerSize=0.5)
 
 ax.set_xlabel('x')

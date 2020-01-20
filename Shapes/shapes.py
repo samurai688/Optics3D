@@ -117,6 +117,19 @@ class Sphere(Shape):
     def __repr__(self):
         return (f"<Sphere, center={self.center}, R={self.R}>")
 
+
+    # test if point is in sphere
+    # nothing fancy
+    def test_point(self, point):
+        distance = np.sqrt((point[0] - self.center[0]) ** 2 +
+                           (point[1] - self.center[1]) ** 2 +
+                           (point[2] - self.center[2]) ** 2 )
+        if distance < self.R:
+            return True
+        else:
+            return False
+
+
     def test_intersect(self, ray):
         # adapted from https://github.com/phire/Python-Ray-tracer/blob/master/sphere.py
         # Dec 9 2018
@@ -134,8 +147,11 @@ class Sphere(Shape):
             norm0 = self.normal(pt0)
             norm1 = self.normal(pt1)
 
-            print(f"        t0 = {t0}")
-            print(f"        t1 = {t1}")
+            if ray.type == "faerie_fire":
+                pass
+            else:
+                print(f"        t0 = {t0}")
+                print(f"        t1 = {t1}")
             # If both t are positive, ray is facing the sphere and intersecting
             # If one t is positive one t is negative, ray is shooting from inside
             # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
