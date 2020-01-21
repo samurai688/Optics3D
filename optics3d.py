@@ -83,7 +83,7 @@ class Optic:
 
 class Compound(Optic):
     def __init__(self, tree, surface_behavior="reflect", index=1.5):
-        self.tree = tree;
+        self.tree = tree
         self.surface_behavior = surface_behavior
         self.index = index
 

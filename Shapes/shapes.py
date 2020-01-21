@@ -5,7 +5,7 @@
 """
 
 import numpy as np
-from general_optics import unit_vector, distance_between
+from general_optics import unit_vector, distance_between, project_onto_plane
 
 
 INTERSECT_CLIPPING_FLOOR = 1e-12
@@ -89,7 +89,132 @@ class Circle(Shape):
         return False, None, None
 
     def __repr__(self):
-        return (f"Circle, center={self.center}, R={self.R}")
+        return (f"Circle, center={self.center}, R={self.R}, normal={self.normal}")
+
+
+
+class InfiniteCylinder(Shape):
+    def __init__(self, center, direction, R=None, D=None):
+        self.center = center
+        (R, D) = check_R_and_D(R, D)
+        self.R = R
+        self.D = D
+        self.direction = unit_vector(direction)
+        self.plane = Plane(center, normal=direction)
+
+    def test_intersect(self, ray):
+        pass
+
+        # transform ray to intersect a unit cylinder
+        ray_objectSpace = ray
+
+        # calculate intersection points on unit cylinder
+        # attempting to follow https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
+        # x^2 + y^2 = 1
+        # Ray = E + t * D
+        # (xE + txD)^2 + (yE + tyD)^2 = 1
+        # t^2(xD^2 + yD^2) + t(2 xE xD + 2 yE yD) +(xE^2 + yE^2 - 1) = 0
+        # this is a quadratic equation with
+        # A = xD^2 + yD^2
+        # B = 2 xE xD + 2 yE yD
+        # C = xE^2 + yE^2 - 1
+        # solve
+
+        xE = ray_objectSpace.position[0]
+        yE = ray_objectSpace.position[1]
+        # zE = ray_objectSpace.position[2]
+        xD = ray_objectSpace.direction[0]
+        yD = ray_objectSpace.direction[1]
+        # zD = ray_objectSpace.direction[2]
+
+        A = xD ** 2 + yD ** 2
+        B = 2 * xE * xD + 2 * yE * yD
+        C = xE ** 2 + yE ** 2 - 1
+        discriminant = B * B - 4 * A * C
+        if discriminant > 0: # line (not necessarily the ray) intersects in two points
+            root = np.sqrt(discriminant)
+            # some numerical bit to avoid loss of precision in the quadratic,
+            # avoid subtracting two things of potentially similar magnitude
+            # https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
+            if B >= 0:
+                t0_objectSpace = (-B - root) / (2 * A)
+                t1_objectSpace = (2 * C) / (-B - root)
+            else: # (B < 0)
+                t0_objectSpace = (2 * C) / (-B + root)
+                t1_objectSpace = (-B + root) / (2 * A)
+        elif discriminant == 0:  # line intersects in one point, tangent
+            t0_objectSpace = (-B) / (2 * A)
+            t1_objectSpace = None
+        else: # (discriminant < 0) line intersects in no points
+            t0_objectSpace = None
+            t1_objectSpace = None
+
+
+        # transform points back
+        if (t0_objectSpace is not None) and (t1_objectSpace is not None):
+            t0 = t0_objectSpace
+            t1 = t1_objectSpace
+            pt0 = ray.position + t0 * ray.direction
+            pt1 = ray.position + t1 * ray.direction
+            normal0 = self.normal(pt0)
+            normal1 = self.normal(pt1)
+        elif t0_objectSpace is not None:  # line intersects in one point, tangent
+            t0 = t0_objectSpace
+            pt0 = ray.position + t0 * ray.direction
+            normal0 = self.normal(pt0)
+        else:  # (discriminant < 0) line intersects in no points
+            pass
+
+
+        # return
+        if (t0_objectSpace is not None) and (t1_objectSpace is not None):
+            # If both t are positive, ray is facing the sphere and intersecting
+            # If one t is positive one t is negative, ray is shooting from inside
+            # If both t are negative, ray is shooting away from the sphere, and intersection is impossible.
+            # So we have to return the smaller and positive t as the intersecting distance for the ray
+            if t0 > INTERSECT_CLIPPING_FLOOR and t1 > INTERSECT_CLIPPING_FLOOR:
+                intersection_count = 2
+                if t0 < t1:
+                    return True, pt0, pt1, normal0, normal1, intersection_count
+                else:
+                    return True, pt1, pt0, normal1, normal0, intersection_count
+            elif t1 > INTERSECT_CLIPPING_FLOOR:
+                intersection_count = 1
+                return True, pt1, None, normal1, None, intersection_count
+            elif t0 > INTERSECT_CLIPPING_FLOOR:
+                intersection_count = 1
+                return True, pt0, None, normal0, None, intersection_count
+            else:
+                intersection_count = 0
+                return False, None, None, None, None, intersection_count
+        elif t0_objectSpace is not None:  # line intersects in one point, tangent
+            # TODO handle negative t0
+            intersection_count = 2 # ugh, I'm counting this case as two cause you're probably outside, give me a break
+            return True, pt0, None, normal0, None, intersection_count
+        else:  # (discriminant < 0) line intersects in no points
+            intersection_count = 0
+            return False, None, None, None, None, intersection_count
+
+
+    def test_point(self, point):
+        # transform point to a unit cylinder
+        point_objectSpace = point
+
+        # find the answer
+        r_point = np.sqrt( point_objectSpace[0] * point_objectSpace[0] +
+                           point_objectSpace[1] * point_objectSpace[1] )
+        if r_point < self.R:
+            return True
+        else:
+            return False
+
+
+    def normal(self, point):
+        """The surface normal at the given point on the infinite cylinder, pointing toward the interior"""
+        r = self.center - point;
+        n = project_onto_plane(r, self.direction)
+        return unit_vector(n)
+
 
 
 class Sphere(Shape):
@@ -162,6 +287,7 @@ class Sphere(Shape):
                 intersection_count = 0
                 return False, None, None, None, None, intersection_count
         elif discrim == 0:  # line intersects in one point, tangent
+            # TODO handle negative t0
             t0 = vDotQ
             pt0 = ray.position + t0 * ray.direction
             norm0 = self.normal(pt0)

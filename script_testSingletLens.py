@@ -8,7 +8,7 @@ Created on Fri Jan 11 21:47:48 2019
 
 
 import numpy as np
-from optics3d import Ray, Lens, Compound, get_index_at_point
+from optics3d import Ray, Lens, Compound, get_index_at_point, add_faerie_fire_rays
 import matplotlib.pyplot as plt
 from Shapes.shapes import Sphere
 from general import set_axes_equal
@@ -55,19 +55,8 @@ for x_val in x_start:
 
 
 FF_radius = max_ray_run_distance - 100
-FF_center = np.array([0, y_center, 0])
-N = 1000
-for i in range(N):
-    v = np.array([0, 0, 0])  # initialize so we go into the while loop
-    while np.linalg.norm(v) < .000001:
-        x = np.random.normal()  # random standard normal
-        y = np.random.normal()
-        z = np.random.normal()
-        v = np.array([x, y, z])
-    v = v / np.linalg.norm(v)  # normalize to unit norm
-    v_dir = -v
-    v_ff = FF_center + v * FF_radius # scale and shift to problem
-    Ray_list.append(Ray(v_ff, v_dir, wavelength=532, print_trajectory=False, type="faerie_fire"))
+FF_center = center_pos
+Ray_list = add_faerie_fire_rays(Ray_list, FF_radius, FF_center)
 
 
 
