@@ -13,7 +13,7 @@ from general_optics import unit_vector, angle_between, distance_between, pathpat
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Circle as mplCircle
 from matplotlib.patches import Rectangle as mplRectangle
-from Shapes.shapes import Rectangle, Disc, Sphere
+from Shapes.shapes import Rectangle, Circle, Sphere
 
 # note: we are representing vectors as 1d numpy arrays, i.e., R = np.array([x, y, z])
 
@@ -155,7 +155,7 @@ class Mirror(Optic):
         self.surfaces = []
         if shape == "circular_flat":
             self.normal = unit_vector(normal)
-            self.surfaces.append(Disc(position, normal, D=D))
+            self.surfaces.append(Circle(position, normal, D=D))
         elif shape == "rectangular_flat":
             self.normal = unit_vector(normal)
             self.surfaces.append(Rectangle(position, normal, tangent, h=h, w=w))
@@ -163,7 +163,7 @@ class Mirror(Optic):
             self.normal = unit_vector(normal)
             self.rc = self.f * 2
             self.p_rc = self.position + self.normal * self.rc
-            self.surfaces.append(Disc(position, normal, D=D))
+            self.surfaces.append(Circle(position, normal, D=D))
             self.surfaces.append(Sphere(center=self.p_rc, R=self.rc))
         elif shape == "circular_convex_spherical":
             self.surfaces.append(Sphere(center=self.position, D=self.D))
@@ -185,7 +185,7 @@ class Mirror(Optic):
         min_distance = np.inf
         shooting_from_outside = None ## TODO
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
-            for surface in self.surfaces:  # for now this is just the one disc or rectangle
+            for surface in self.surfaces:  # for now this is just the one Circle or rectangle
                 intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True
@@ -202,15 +202,15 @@ class Mirror(Optic):
                     break
             if intersected_sphere:
                 for surface in self.surfaces:
-                    if isinstance(surface, Disc):  # then check for intersection with the disc
-                        intersected_disc, int_pt_disc, normal_disc = surface.test_intersect(ray)
+                    if isinstance(surface, Circle):  # then check for intersection with the Circle
+                        intersected_circle, int_pt_circle, normal_circle = surface.test_intersect(ray)
                         break
-                if intersected_sphere and intersected_disc:
-                    intersected = True  # pick the sphere intersection that is closest to the disc
+                if intersected_sphere and intersected_circle:
+                    intersected = True  # pick the sphere intersection that is closest to the circle
                                         # TODO: edge cases, the above isn't exhaustive
-                    distance1 = distance_between(int_pt_disc, int_pt_sphere1)
+                    distance1 = distance_between(int_pt_circle, int_pt_sphere1)
                     if int_pt_sphere2 is not None:
-                        distance2 = distance_between(int_pt_disc, int_pt_sphere2)
+                        distance2 = distance_between(int_pt_circle, int_pt_sphere2)
                         if distance1 < distance2:
                             intersection_pt = int_pt_sphere1
                             normal = norm1
@@ -290,7 +290,7 @@ class Mirror(Optic):
                 pathpatch_2d_to_3d(p, z=0, normal=self.normal)
                 pathpatch_translate(p, (x, y, z))
                 return None
-            elif self.shape == "circular_concave_spherical":  # for now just draw as disc
+            elif self.shape == "circular_concave_spherical":  # for now just draw as circle
                 x = self.position[0]
                 y = self.position[1]
                 z = self.position[2]
@@ -331,7 +331,7 @@ class Lens(Optic):
         self.thinlens = thinlens
         self.index = index
         if shape == "spherical_biconvex":
-            self.surfaces.append(Disc(position, normal, D=D))
+            self.surfaces.append(Circle(position, normal, D=D))
         elif shape == "spherical":
             self.surfaces.append(Sphere(position, D=D))
         else:
@@ -355,7 +355,7 @@ class Lens(Optic):
         if self.shape == "spherical_biconvex":
             normal = None
             if self.thinlens:
-                for surface in self.surfaces: # if thinlens, intersect with the disc
+                for surface in self.surfaces: # if thinlens, intersect with the circle
                     intersected_here, int_pt, normal = surface.test_intersect(ray)
                     if intersected_here:
                         intersected = True
@@ -482,7 +482,7 @@ class Grating(Optic):
         min_distance = np.inf
         shooting_from_outside = None
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
-            for surface in self.surfaces:  # for now this is just the one disc or rectangle
+            for surface in self.surfaces:  # for now this is just the one circle or rectangle
                 intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True
@@ -548,7 +548,7 @@ class Detector(Optic):
         min_distance = np.inf
         shooting_from_outside = None
         if self.shape == "circular_flat" or self.shape == "rectangular_flat":
-            for surface in self.surfaces:  # for now this is just the one disc or rectangle
+            for surface in self.surfaces:  # for now this is just the one circle or rectangle
                 intersected_here, int_pt, normal = surface.test_intersect(ray)
                 if intersected_here:
                     intersected = True

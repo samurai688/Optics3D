@@ -61,7 +61,7 @@ class Plane(Shape):
         denominator = np.dot(unit_vector(self.normal), unit_vector(ray.direction))
         #  ARB_EPSILON_VALUE is an arbitrary epsilon value. We just want
         #  to avoid working with intersections that are almost orthogonal.
-        ARB_EPSILON_VALUE = 1e-8
+        ARB_EPSILON_VALUE = 1e-9
         if np.abs(denominator) > ARB_EPSILON_VALUE:
             difference = self.center - ray.position
             t = np.dot(difference, self.normal) / denominator
@@ -72,25 +72,14 @@ class Plane(Shape):
 
 
 class Circle(Shape):
-    def __init__(self, center, R=None, D=None):
+    def __init__(self, center, normal=None, R=None, D=None):
         self.center = center
         (R, D) = check_R_and_D(R, D)
         self.R = R
         self.D = D
-
-    def __repr__(self):
-        return (f"Circle, center={self.center}, R={self.R}")
-
-
-class Disc(Circle):
-    def __init__(self, center, normal, R=None, D=None):
-        self.center = center
-        self.normal = unit_vector(normal)
-        (R, D) = check_R_and_D(R, D)
-        self.R = R
-        self.D = D
-        self.circle = Circle(center, R=R)
-        self.plane = Plane(center, normal)
+        if normal is not None:
+            self.normal = unit_vector(normal)
+            self.plane = Plane(center, normal)
 
     def test_intersect(self, ray):
         intersected, intersection_pt, normal = self.plane.test_intersect(ray)
@@ -100,7 +89,7 @@ class Disc(Circle):
         return False, None, None
 
     def __repr__(self):
-        return (f"Disc, center={self.center}, R={self.R}, normal={self.normal}")
+        return (f"Circle, center={self.center}, R={self.R}")
 
 
 class Sphere(Shape):
@@ -110,18 +99,17 @@ class Sphere(Shape):
         self.R = R
         self.D = D
 
-    def normal(self, p):
+    def normal(self, point):
         """The surface normal at the given point on the sphere, pointing toward the center"""
-        return unit_vector(self.center - p)
+        return unit_vector(self.center - point)
 
     def __repr__(self):
         return (f"<Sphere, center={self.center}, R={self.R}>")
 
 
     # test if point is in sphere
-    # nothing fancy
     def test_point(self, point):
-        distance = np.linalg.norm(point - self.center)
+        distance = distance_between(point, self.center)
         # distance = np.sqrt((point[0] - self.center[0]) ** 2 +
         #                    (point[1] - self.center[1]) ** 2 +
         #                    (point[2] - self.center[2]) ** 2 )
@@ -130,7 +118,7 @@ class Sphere(Shape):
         else:
             return False
 
-
+    # test if ray intersects with sphere and get the points
     def test_intersect(self, ray):
         # adapted from https://github.com/phire/Python-Ray-tracer/blob/master/sphere.py
         # Dec 9 2018
@@ -182,6 +170,26 @@ class Sphere(Shape):
         else:  # discrim < 0   # line does not intersect
             intersection_count = 0
             return False, None, None, None, None, intersection_count
+
+
+class Cylinder(Shape):
+
+    def __init__(self, center, R=None, D=None, h=None):
+        self.center = center
+        (R, D) = check_R_and_D(R, D)
+        self.R = R
+        self.D = D
+        self.h = h
+
+    def normal(self, point):
+        """The surface normal at the given point on the cylinder, pointing toward the interior"""
+        pass
+
+    def test_intersect(self, ray):
+        pass
+
+    def test_point(self, point):
+        pass
 
 
 class Rectangle(Shape):
