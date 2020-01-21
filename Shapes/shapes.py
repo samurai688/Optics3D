@@ -5,7 +5,8 @@
 """
 
 import numpy as np
-from general_optics import unit_vector, distance_between, project_onto_plane
+from general_optics import unit_vector, distance_between, project_onto_plane, \
+    rotation_matrix4, scaling_matrix4, translation_matrix4
 
 
 INTERSECT_CLIPPING_FLOOR = 1e-12
@@ -106,7 +107,33 @@ class InfiniteCylinder(Shape):
         pass
 
         # transform ray to intersect a unit cylinder
-        ray_objectSpace = ray
+        # step 1 -- translate to origin
+        translation_vector = -self.center
+        trans_mat = translation_matrix4(translation_vector)
+        ray_pos4 = np.array([0.0, 0.0, 0.0, 1.0])
+        ray_pos4[0:3] = ray.position
+        ray_dir4 = np.array([0.0, 0.0, 0.0, 0.0])
+        ray_dir4[0:3] = ray.direction
+        ray_pos_translated = np.dot(trans_mat, ray_pos4)
+        ray_dir_translated = ray_dir4
+        # step 2 -- rotate to align with +z
+        z_axis = np.array([0.0, 0.0, 1.0])
+        rotation_mat = rotation_matrix4(self.direction, z_axis)
+        ray_pos_rotated = np.dot(rotation_mat, ray_pos_translated)
+        ray_dir_rotated = np.dot(rotation_mat, ray_dir_translated)
+        # step 3 -- scale to unit cylinder
+        scale_factor = 1 / self.R
+        scaling_vector = np.array([scale_factor, scale_factor, scale_factor])
+        scaling_mat = scaling_matrix4(scaling_vector)
+        ray_pos_scaled = np.dot(scaling_mat, ray_pos_rotated)
+        ray_dir_scaled = ray_dir_rotated
+        ray_pos_objectSpace = ray_pos_scaled
+        ray_dir_objectSpace = ray_dir_scaled
+
+        # if ray.type == "normal":
+        #     print(f"ray_pos4 = {ray_pos4}")
+        #     print(f"ray_dir4 = {ray_dir4}")
+        #     print(f"ray_pos_objectSpace = {ray_pos_objectSpace}")
 
         # calculate intersection points on unit cylinder
         # attempting to follow https://www.cl.cam.ac.uk/teaching/1999/AGraphHCI/SMAG/node2.html
@@ -120,12 +147,12 @@ class InfiniteCylinder(Shape):
         # C = xE^2 + yE^2 - 1
         # solve
 
-        xE = ray_objectSpace.position[0]
-        yE = ray_objectSpace.position[1]
-        # zE = ray_objectSpace.position[2]
-        xD = ray_objectSpace.direction[0]
-        yD = ray_objectSpace.direction[1]
-        # zD = ray_objectSpace.direction[2]
+        xE = ray_pos_objectSpace[0]
+        yE = ray_pos_objectSpace[1]
+        # zE = ray_pos_objectSpace[2]
+        xD = ray_dir_objectSpace[0]
+        yD = ray_dir_objectSpace[1]
+        # zD = ray_dir_objectSpace[2]
 
         A = xD ** 2 + yD ** 2
         B = 2 * xE * xD + 2 * yE * yD
@@ -152,14 +179,17 @@ class InfiniteCylinder(Shape):
 
         # transform points back
         if (t0_objectSpace is not None) and (t1_objectSpace is not None):
-            t0 = t0_objectSpace
-            t1 = t1_objectSpace
+            # translation doesn't affect distances?
+            # rotation shouldn't affect distances?
+            # scaling should affect
+            t0 = t0_objectSpace / scale_factor
+            t1 = t1_objectSpace / scale_factor
             pt0 = ray.position + t0 * ray.direction
             pt1 = ray.position + t1 * ray.direction
             normal0 = self.normal(pt0)
             normal1 = self.normal(pt1)
         elif t0_objectSpace is not None:  # line intersects in one point, tangent
-            t0 = t0_objectSpace
+            t0 = t0_objectSpace / scale_factor
             pt0 = ray.position + t0 * ray.direction
             normal0 = self.normal(pt0)
         else:  # (discriminant < 0) line intersects in no points
@@ -198,12 +228,28 @@ class InfiniteCylinder(Shape):
 
     def test_point(self, point):
         # transform point to a unit cylinder
-        point_objectSpace = point
+        # step 1 -- translate cylinder center to origin
+        translation_vector = -self.center
+        trans_mat = translation_matrix4(translation_vector)
+        point4 = np.array([0.0, 0.0, 0.0, 1.0])
+        point4[0:3] = point
+        point_translated = np.dot(trans_mat, point4)
+        # step 2 -- rotate to align with +z
+        z_axis = np.array([0.0, 0.0, 1.0])
+        rotation_mat = rotation_matrix4(self.direction, z_axis)
+        point_rotated = np.dot(rotation_mat, point_translated)
+        # step 3 -- scale to unit cylinder
+        scale_factor = 1 / self.R
+        scaling_vector = np.array([scale_factor, scale_factor, scale_factor])
+        scaling_mat = scaling_matrix4(scaling_vector)
+        point_scaled = np.dot(scaling_mat, point_rotated)
+        point_objectSpace = point_scaled
+
 
         # find the answer
         r_point = np.sqrt( point_objectSpace[0] * point_objectSpace[0] +
                            point_objectSpace[1] * point_objectSpace[1] )
-        if r_point < self.R:
+        if r_point < 1:
             return True
         else:
             return False

@@ -59,6 +59,62 @@ def rotation_matrix_axis_angle(axis, theta):
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
 
+# https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+def rotation_matrix2(a, b):
+    """
+    Calculates the rotation matrix that rotates unit vector a onto unit vector b.
+    """
+    a /= np.linalg.norm(a)
+    b /= np.linalg.norm(b)
+
+    v = np.cross(a, b)
+    sin_angle = np.linalg.norm(v)
+    cos_angle = np.dot(a, b)
+
+    if sin_angle == 0:
+        M = np.identity(3) if cos_angle > 0. else -np.identity(3)
+    else:
+        eye = np.eye(3)
+        skew = np.array([[    0,  -v[2],   v[1]],
+                         [ v[2],      0,  -v[0]],
+                         [-v[1],   v[0],      0]], dtype=np.float64)
+        M = eye + skew + np.dot(skew, skew) / (1 + cos_angle)
+    return M
+
+
+def rotation_matrix4(a, b):
+    """
+    one of our 4d matrix thingies that rotates, from 3-vector a to 3-vector b
+    """
+    rot_matrix = np.eye(4)
+    rot_matrix[:3, :3] = rotation_matrix2(a, b)
+    return rot_matrix
+
+
+
+def scaling_matrix4(scaling_vector):
+    """
+    one of our 4d matrix thingies that scales according to the input 3-vector
+    """
+    scaling_matrix = np.eye(4)
+    scaling_matrix[0, 0] = scaling_vector[0]
+    scaling_matrix[1, 1] = scaling_vector[1]
+    scaling_matrix[2, 2] = scaling_vector[2]
+    return scaling_matrix
+
+
+
+def translation_matrix4(translation_vector):
+    """
+    one of our 4d matrix thingies that translates according to the input 3-vector
+    """
+    translation_matrix = np.eye(4)
+    translation_matrix[0:3,3] = translation_vector
+    return translation_matrix
+
+
+
+
 ######
 ###### StackOverflow
 ######
@@ -92,6 +148,7 @@ def rotation_matrix(v1, v2):
         M = ddt + cos_angle * (eye - ddt) + sin_angle * skew
 
     return M
+
 
 def pathpatch_2d_to_3d(pathpatch, z = 0, normal = 'z'):
     """

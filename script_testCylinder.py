@@ -16,22 +16,22 @@ from general_optics import BinaryTree
 plt.close("all")
 
 y_center = 0
-center_pos = np.array([0, y_center, 0])
-ball1_pos = np.array([0, y_center, 0])
-shape1 = InfiniteCylinder(ball1_pos, R=1, direction=[0, 0, 1])
+center_pos = np.array([0, 5, 0])
+cyl1_pos = np.array([0, 5, 0])
+shape1 = InfiniteCylinder(cyl1_pos, R=2, direction=[0, -1, 0])
 
 shapeCOMPOUNDtree = BinaryTree(shape1)
-shapeCOMPOUND = Compound(shapeCOMPOUNDtree, surface_behavior="refract", index=1.5167)
+shapeCOMPOUND = Compound(shapeCOMPOUNDtree, surface_behavior="reflect", index=1.5167)
 
 Optic_list = []
 Optic_list.append(shapeCOMPOUND)
 
 
-max_ray_run_distance = 5
+max_ray_run_distance = 10
 
-x_start = [-3]
-y_start = np.linspace(-0.5, 0.5, 11)
-z_start = [0]
+x_start = [-6]
+y_start = [5]
+z_start = np.linspace(-1.0, 1.0, 11)
 
 Ray_list = []
 for x_val in x_start:
@@ -42,7 +42,7 @@ for x_val in x_start:
 
 
 FF_radius = max_ray_run_distance * 0.85
-FF_center = np.array([0, y_center, 0])
+FF_center = center_pos
 Ray_list = add_faerie_fire_rays(Ray_list, FF_radius, FF_center)
 
 
@@ -59,9 +59,10 @@ ax = plt.axes()
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
     if ray.type == "normal":
-        ax.plot(ray_history[:, 0], ray_history[:, 1], "-r")
+        ax.plot(ray_history[:, 0], ray_history[:, 2], "-r")
     elif ray.type == "faerie_fire":
-        ax.plot(ray_history[1:, 0], ray_history[1:, 1], "ob", MarkerSize=1)
+        ax.plot(ray_history[1:, 0], ray_history[1:, 2], "ob", MarkerSize=1)
+plt.axis("equal")
 
 
 
