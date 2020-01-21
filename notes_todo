@@ -225,6 +225,9 @@
 
           let's clean up and test-ify stuff a bit
           add infinite cylinder, unit cylinder only
+          okay now added matrix transforms so that theoretically we can have arbitrary position infinite cylinders.
+          got it to work on the first example, testCylinder, that has a translate, rotate, and scale, but needs more
+          testing and bug-checking. Particularly the rotate since that's the trickiest one I think.
 
 
 
