@@ -239,6 +239,8 @@
             okay, finished a version of an ideal image-forming lens in "script_testImaging"
             it has infinitesimal thickness, which might be awkward for laying out real systems with relays
             could make a finite thickness version out of an ideal collimator element and ideal focusing element
+            okay added those, they don't work as relay but it's okay could be useful at some point
+            for finite thickness relays, you can do an intermediate ideal relay e.g. "script_testIdealRelay"
 
 
 
