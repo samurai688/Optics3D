@@ -59,16 +59,28 @@ class Plane(Shape):
         return (f"Plane, center={self.center}, normal={self.normal}")
 
     def test_intersect(self, ray):
+        # print("*** test intersect ***")
+        # print(f"self.normal = {self.normal}")
+        # print(f"self.center = {self.center}")
+        # print(f"ray_position = {ray.position}")
+        # print(f"ray.direction = {ray.direction}")
+        # print(f"ray z angle = {180 / np.pi * np.arctan(ray.direction[2] / ray.direction[1])} deg")
         denominator = np.dot(unit_vector(self.normal), unit_vector(ray.direction))
         #  ARB_EPSILON_VALUE is an arbitrary epsilon value. We just want
         #  to avoid working with intersections that are almost orthogonal.
         ARB_EPSILON_VALUE = 1e-9
         if np.abs(denominator) > ARB_EPSILON_VALUE:
             difference = self.center - ray.position
+            # print(f"difference = {difference}")
+            # print(f"denominator = {denominator}")
             t = np.dot(difference, self.normal) / denominator
+            # print(f"t = {t}")
             if t > ARB_EPSILON_VALUE:
                 intersection_pt = ray.position + t * ray.direction
+                # print(f"intersection_pt = {intersection_pt}")
+                # print("*** end test intersect -- hit***")
                 return True, intersection_pt, self.normal
+        # print("*** end test intersect -- no hit ***")
         return False, None, None
 
 

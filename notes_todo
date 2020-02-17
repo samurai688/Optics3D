@@ -229,7 +229,16 @@
           got it to work on the first example, testCylinder, that has a translate, rotate, and scale, but needs more
           testing and bug-checking. Particularly the rotate since that's the trickiest one I think.
 
+        1/21/2020
 
+        2/16/2020
+            working on an imaging test "script_testImaging", trying to make an ideal thin lens option
+            it is working okay in the plane I thought about, but there is some issue when off the x-axis
+
+        2/17/2020
+            okay, finished a version of an ideal image-forming lens in "script_testImaging"
+            it has infinitesimal thickness, which might be awkward for laying out real systems with relays
+            could make a finite thickness version out of an ideal collimator element and ideal focusing element
 
 
 

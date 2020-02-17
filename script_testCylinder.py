@@ -16,9 +16,9 @@ from general_optics import BinaryTree
 plt.close("all")
 
 y_center = 0
-center_pos = np.array([0, 5, 0])
-cyl1_pos = np.array([0, 5, 0])
-shape1 = InfiniteCylinder(cyl1_pos, R=2, direction=[0, -1, 0])
+center_pos = np.array([0, 2, 0])
+cyl1_pos = np.array([0, 2, 0])
+shape1 = InfiniteCylinder(cyl1_pos, R=2, direction=[0, 1, 1])
 
 shapeCOMPOUNDtree = BinaryTree(shape1)
 shapeCOMPOUND = Compound(shapeCOMPOUNDtree, surface_behavior="reflect", index=1.5167)
@@ -30,8 +30,8 @@ Optic_list.append(shapeCOMPOUND)
 max_ray_run_distance = 10
 
 x_start = [-6]
-y_start = [5]
-z_start = np.linspace(-1.0, 1.0, 11)
+y_start = [2]
+z_start = np.linspace(-2.0, 2.0, 21)
 
 Ray_list = []
 for x_val in x_start:

@@ -187,6 +187,48 @@ def pathpatch_translate(pathpatch, delta):
 
 
 
+def image_rays(y_center, size=10, angle=0.2, x_res=11, z_res=11, angle_res=3, pattern="circle", pattern_d=5):
+
+    # if x_res < 1:
+    #     raise ValueError("cannot have less than 1 x_res")
+    # elif x_res == 1:
+    #     x = np.array([0])
+    # else:
+    x = np.linspace(-size / 2, size / 2, x_res)
+    if z_res < 1:
+        raise ValueError("cannot have less than 1 z_res")
+    elif z_res == 1:
+        z = np.array([0])
+    else:
+        z = np.linspace(-size / 2, size / 2, z_res)
+    if angle_res < 1:
+        raise ValueError("cannot have less than 1 angle_res")
+    elif angle_res == 1:
+        angles = np.array([0])
+    else:
+        angles = np.linspace(-angle, angle, angle_res)
+    origins = []
+    dirs = []
+    waves = []
+    for x_val in x:
+        for z_val in z:
+            for angle_val in angles:
+                origins.append(np.array([x_val, y_center, z_val]))
+                dirs.append(np.array([0, np.cos(angle_val), np.sin(angle_val)]))
+                if pattern == "circle":
+                    R2 = x_val * x_val + z_val * z_val
+                    if R2 <= pattern_d * pattern_d / 4:
+                        waves.append(680.0)
+                    else:
+                        waves.append(450.0)
+    return origins, dirs, waves
+
+
+
+
+
+
+
 
 
 

@@ -556,12 +556,11 @@ class Detector(Optic):
                     if distance_to_surface < min_distance:
                         min_distance = distance_to_surface
                         intersection_pt = int_pt
-            if intersected:
-                self.hit_data.append(np.append(intersection_pt, ray.wavelength))
         return intersected, intersection_pt, normal, shooting_from_outside
 
     def do_intersect(self, ray, int_pt, int_normal, shooting_from_outside):
         ray.blocked = True
+        self.hit_data.append(np.append(int_pt, ray.wavelength))
 
     def draw(self, ax, view="3d"):  # Detector
         """Um, somehow draw the optic"""
@@ -574,7 +573,7 @@ class Detector(Optic):
                         y = [surface.bounds[0, 1], surface.bounds[1, 1], surface.bounds[2, 1], surface.bounds[3, 1]]
                         z = [surface.bounds[0, 2], surface.bounds[1, 2], surface.bounds[2, 2], surface.bounds[3, 2]]
                         verts = [list(zip(x, y, z))]
-                        ax.add_collection3d(Poly3DCollection(verts, facecolor='gray', edgecolor='black'), zs=z)
+                        ax.add_collection3d(Poly3DCollection(verts, facecolor='gray', edgecolor='black', alpha=0.5), zs=z)
                 return None
 
 
@@ -634,11 +633,65 @@ class Ray:
 
     def refract(self, refract_type="thin_lens", normal=None, optic=None, intersection_pt=None, eta1=None, eta2=None):
         """Refract a ray."""
-        if refract_type == "thin_lens":
-            # from "Thin Lens Ray Tracing", Gatland, 2002
-            # equation 10, nbold_doubleprime = nbold - rbold / f
+        if refract_type == "thin_lens":  # should rename to "ideal_image" or something
+
+            # we will turn the ray as if it were coming from an object at 2f to form a perfect 1:1 image at 2f
+            # if this doesn't obey the thin lens imaging equation everywhere, too bad, I think it's the best we can do
+            # without the optic "cheating" i.e. it being told where the "object plane" is supposed to be
+            # okay, looks like this does work and satisfy the lens equation, nice
+            #
+            # we will assume optic normal and self direction are unit vectors
+
             r = intersection_pt - optic.position
-            self.direction = self.direction - r / optic.f
+            h = np.linalg.norm(r) # distance from center
+            dot_product1 = np.dot(optic.normal, self.direction)
+
+            if dot_product1 < 0:
+                the_optic_normal = -optic.normal
+            else:
+                the_optic_normal = optic.normal
+
+            dot_product = np.dot(the_optic_normal, self.direction)
+            if np.isclose(dot_product, 0.0, rtol=1e-10):
+                # vectors are very nearly orthogonal
+                # do nothing
+                pass
+            elif np.allclose(self.direction, the_optic_normal, rtol=1e-10) or np.allclose(self.direction, -the_optic_normal, rtol=1e-10):
+                # vectors are very nearly parallel
+                # update the ray's direction to go at the focal point
+                focal_point = optic.position + optic.f * the_optic_normal
+                vector_to_image = focal_point - self.position
+                self.direction = vector_to_image / np.linalg.norm(vector_to_image)
+            else:
+                # vectors are neither parallel nor orthogonal
+                # step 1: back-calculate the "object" point at 2f
+                # um, okay, so we want to multiply it by a scalar such that
+                # the projection in the direction of the optic normal is equal to 2f
+                # scalar projection of a onto b is ( a . b ) / norm(b)
+                projection_onto_optic_normal = np.dot(self.direction, the_optic_normal)
+                scale_factor = (2 * optic.f) / projection_onto_optic_normal
+                vector_back_to_2f_object = -self.direction * scale_factor
+                object_point = r + vector_back_to_2f_object
+                # step 2: get the image point as the inverted object point
+                image_point = -object_point
+                # step 3: update the ray's direction to go towards the image point
+                vector_to_image = image_point - r
+                self.direction = vector_to_image / np.linalg.norm(vector_to_image)
+
+
+            # # original method,
+            # # from "Thin Lens Ray Tracing", Gatland, 2002
+            # # equation 10, nbold_doubleprime = nbold - rbold / f
+            # r = intersection_pt - optic.position
+            # self.direction = unit_vector(self.direction - r / optic.f)
+            # # normalization issue -- trying unit_vector-ize the whole thing 2/16/2020
+            # #   this clears up issues related to having a non-normalized ray direction
+            # #   now it just seems to be slightly inaccurate...
+            # #   or rather, um, it forms non-perfect images
+            # #   okay, believing this might be due to use of the paraxial approximation in this thin lens treatment
+            # #   which isn't wrong per se, but what if I want an ideal image forming lens
+            # #   ... okay no, if the paraxial is executed well, it should form a perfect image ...
+
         elif refract_type == "snells_law":
             # from 2006 internet pdf:
             # "Reflections and Refractions in Ray Tracing"
