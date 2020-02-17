@@ -316,7 +316,7 @@ class Mirror(Optic):
 
 class Lens(Optic):
     def __init__(self, position, normal=None, shape="spherical_biconvex", D=None, w=None, h=None,
-                 f=None, tangent=None, thinlens=False, index=1.5):
+                 f=None, tangent=None, type="normal", index=1.5):
         self.position = position
         if normal is not None:
             self.normal = unit_vector(normal)
@@ -328,7 +328,7 @@ class Lens(Optic):
         self.h = h
         self.f = f
         self.surfaces = []
-        self.thinlens = thinlens
+        self.type = type
         self.index = index
         if shape == "spherical_biconvex":
             self.surfaces.append(Circle(position, normal, D=D))
@@ -354,7 +354,7 @@ class Lens(Optic):
         shooting_from_outside = True
         if self.shape == "spherical_biconvex":
             normal = None
-            if self.thinlens:
+            if self.type == "ideal" or self.type == "ideal_collimate" or self.type == "ideal_focus":
                 for surface in self.surfaces: # if thinlens, intersect with the circle
                     intersected_here, int_pt, normal = surface.test_intersect(ray)
                     if intersected_here:
@@ -400,8 +400,18 @@ class Lens(Optic):
         return intersected, intersection_pt, normal, shooting_from_outside
 
     def do_intersect(self, ray, intersection_pt, intersection_normal, shooting_from_outside):
-        if self.thinlens:
+        if self.type == "ideal":
             ray.refract(refract_type="thin_lens",
+                        normal=intersection_normal,
+                        optic=self,
+                        intersection_pt=intersection_pt)
+        elif self.type == "ideal_collimate":
+            ray.refract(refract_type="ideal_collimate",
+                        normal=intersection_normal,
+                        optic=self,
+                        intersection_pt=intersection_pt)
+        elif self.type == "ideal_focus":
+            ray.refract(refract_type="ideal_focus",
                         normal=intersection_normal,
                         optic=self,
                         intersection_pt=intersection_pt)
@@ -691,6 +701,26 @@ class Ray:
             # #   okay, believing this might be due to use of the paraxial approximation in this thin lens treatment
             # #   which isn't wrong per se, but what if I want an ideal image forming lens
             # #   ... okay no, if the paraxial is executed well, it should form a perfect image ...
+
+        elif refract_type == "ideal_collimate":
+            # update the ray's direction to go in the direction of the optic normal
+            dot_product1 = np.dot(optic.normal, self.direction)
+            if dot_product1 < 0:
+                the_optic_normal = -optic.normal
+            else:
+                the_optic_normal = optic.normal
+            self.direction = unit_vector(the_optic_normal)
+
+        elif refract_type == "ideal_focus":
+            # update the ray's direction to go at the focal point
+            dot_product1 = np.dot(optic.normal, self.direction)
+            if dot_product1 < 0:
+                the_optic_normal = -optic.normal
+            else:
+                the_optic_normal = optic.normal
+            focal_point = optic.position + optic.f * the_optic_normal
+            vector_to_image = focal_point - self.position
+            self.direction = vector_to_image / np.linalg.norm(vector_to_image)
 
         elif refract_type == "snells_law":
             # from 2006 internet pdf:

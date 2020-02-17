@@ -20,12 +20,17 @@ object_size = 10  # mm
 image_half_angle = np.arctan(1 / image_f_number)  # radians
 
 
-lens_f = 25
+lens_f1 = 12.5
+lens_f2 = 12.5
 object_y = 0
-lens_y = 50 # 50
-object_dist = lens_y - object_y
-image_dist = 1 / (1 / lens_f - 1 / (object_dist))
-image_y = lens_y + image_dist
+lens_y1 = 25
+lens_y2 = 75
+object_dist = lens_y1 - object_y
+relay_img_dist1 = 1 / (1 / lens_f1 - 1 / (object_dist))
+relay_img_y = lens_y1 + relay_img_dist1
+relay_img_dist2 = lens_y2 - relay_img_y
+image_dist = 1 / (1 / lens_f2 - 1 / (relay_img_dist2))
+image_y = lens_y2 + image_dist
 mag = image_dist / object_dist
 image_size = object_size * mag
 print(f"object_size = {object_size}")
@@ -37,11 +42,17 @@ print(f"image_size = {image_size}")
 
 
 
-lens_center = np.array([0, lens_y, 0])
+lens_center = np.array([0, lens_y1, 0])
 lens_normal = np.array([0, -1, 0])
 lens_tangent = np.array([0, 0, 1])
 lens1 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
-             tangent=lens_tangent, D=50, type="ideal", f=lens_f)
+             tangent=lens_tangent, D=50, type="ideal", f=lens_f1)
+
+lens_center = np.array([0, lens_y2, 0])
+lens_normal = np.array([0, -1, 0])
+lens_tangent = np.array([0, 0, 1])
+lens2 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
+             tangent=lens_tangent, D=75, type="ideal", f=lens_f2)
 
 detector_center = np.array([0, image_y, 0])
 detector_normal = np.array([0, -1, 0])
@@ -54,6 +65,7 @@ detector1 = Detector(detector_center, normal=detector_normal, shape="rectangular
 
 Optic_list = []
 Optic_list.append(lens1)
+Optic_list.append(lens2)
 Optic_list.append(detector1)
 
 max_ray_run_distance = 150

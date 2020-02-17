@@ -189,12 +189,12 @@ def pathpatch_translate(pathpatch, delta):
 
 def image_rays(y_center, size=10, angle=0.2, x_res=11, z_res=11, angle_res=3, pattern="circle", pattern_d=5):
 
-    # if x_res < 1:
-    #     raise ValueError("cannot have less than 1 x_res")
-    # elif x_res == 1:
-    #     x = np.array([0])
-    # else:
-    x = np.linspace(-size / 2, size / 2, x_res)
+    if x_res < 1:
+        raise ValueError("cannot have less than 1 x_res")
+    elif x_res == 1:
+        x = np.array([0])
+    else:
+        x = np.linspace(-size / 2, size / 2, x_res)
     if z_res < 1:
         raise ValueError("cannot have less than 1 z_res")
     elif z_res == 1:
