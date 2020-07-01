@@ -41,24 +41,35 @@ lens1 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
 
 mir_center = np.array([0, image_y, 0])
 mir_normal = np.array([0, -1, 0])
-dmd_normal = np.array([0.2, -1, 0])
+dmd_angle_tan = np.tan(10.9 * np.pi / 180)
+dmd_normal = np.array([dmd_angle_tan, -1, 0])
+print(f"lens angle: {np.arctan(dmd_angle_tan) * 180 / np.pi}")
 mir_tangent = np.array([0, 0, 1])
 mirror1 = Mirror(mir_center, normal=mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=50, w=50,
                  type="dmd", dmd_normal=dmd_normal)
 
 
 lens2_f = 25
-lens2_y = 150
-lens2_x = 20
-
+lens2_dist = 2 * lens2_f
+lens2_angle_tan = np.tan(-21.8 * np.pi / 180)
+lens2_angle_rad = np.arctan(lens2_angle_tan)
+lens2_y = image_y - lens2_dist * np.cos(lens2_angle_rad)
+lens2_x = lens2_dist * -np.sin(lens2_angle_rad)
 lens_center = np.array([lens2_x, lens2_y, 0])
-lens_normal = np.array([-0.4, 1, 0])
+lens_normal = np.array([lens2_angle_tan, 1, 0])
 lens_tangent = np.array([0, 0, 1])
+print(f"lens angle: {np.arctan(lens2_angle_tan) * 180 / np.pi}")
 lens2 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
              tangent=lens_tangent, D=25, type="ideal", f=lens2_f)
 
-detector_center = np.array([40, 100, 0])
-detector_normal = np.array([-0.6, 1, 0])
+det_dist = 4 * lens2_f
+det_angle_tan = np.tan(-43.6 * np.pi / 180)
+det_angle_rad = np.arctan(det_angle_tan)
+det_y = image_y - det_dist * np.cos(lens2_angle_rad)
+det_x = det_dist * -np.sin(lens2_angle_rad)
+detector_center = np.array([det_x, det_y, 0])
+detector_normal = np.array([det_angle_tan, 1, 0])
+print(f"detector angle: {np.arctan(det_angle_tan) * 180 / np.pi}")
 detector_tangent = np.array([0, 0, 1])
 detector_h = 30
 detector_w = 30
@@ -71,7 +82,7 @@ Optic_list.append(lens1)
 Optic_list.append(lens2)
 Optic_list.append(detector1)
 
-max_ray_run_distance = 350
+max_ray_run_distance = 400
 
 
 
