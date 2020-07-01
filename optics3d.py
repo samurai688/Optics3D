@@ -144,7 +144,7 @@ class Compound(Optic):
 
 class Mirror(Optic):
     def __init__(self, position, shape="circular_flat", normal=None, D=None, w=None, h=None,
-                 thickness=10, f=None, tangent=None):
+                 thickness=10, f=None, tangent=None, type="normal", dmd_normal=None):
         self.position = position
         self.shape = shape
         self.D = D
@@ -152,6 +152,8 @@ class Mirror(Optic):
         self.h = h
         self.thickness = thickness
         self.f = f
+        self.type = type
+        self.dmd_normal = unit_vector(dmd_normal)
         self.surfaces = []
         if shape == "circular_flat":
             self.normal = unit_vector(normal)
@@ -243,9 +245,14 @@ class Mirror(Optic):
         return intersected, intersection_pt, normal, shooting_from_outside
 
     def do_intersect(self, ray, intersection_pt, intersection_normal, shooting_from_outside):
-        ray.reflect(reflect_type="specular_flat",
-                    normal=intersection_normal,
-                    intersection_pt=intersection_pt)
+        if self.type == "normal":
+            ray.reflect(reflect_type="specular_flat",
+                        normal=intersection_normal,
+                        intersection_pt=intersection_pt)
+        elif self.type == "dmd":
+            ray.reflect(reflect_type="specular_flat",
+                        normal=self.dmd_normal,
+                        intersection_pt=intersection_pt)
 
     def draw(self, ax, view="3d"):  # Mirror
         """Um, somehow draw the optic"""

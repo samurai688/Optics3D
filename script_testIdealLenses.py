@@ -17,7 +17,7 @@ plt.close("all")
 
 image_f_number = 8
 object_size = 10  # mm
-image_half_angle = np.arctan(1 / image_f_number)  # radians
+image_half_angle = np.arctan(1 / 2 / image_f_number)  # radians
 
 
 lens_f1 = 50
@@ -68,7 +68,7 @@ Optic_list.append(detector1)
 max_ray_run_distance = 150
 
 Ray_list = []
-origins, dirs, waves = image_rays(0, size=object_size, x_res=1, z_res=1, angle_res=5)
+origins, dirs, waves = image_rays(0, size=object_size, angle=image_half_angle, x_res=1, z_res=1, angle_res=5)
 for ix, origin in enumerate(origins):
     Ray_list.append(Ray(origins[ix], dirs[ix], wavelength=waves[ix], print_trajectory=False))
 

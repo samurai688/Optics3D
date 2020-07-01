@@ -413,7 +413,6 @@ class Rectangle(Shape):
                 if 0 <= np.dot(BC, BM) <= np.dot(BC, BC):
                     return True, intersection_pt, normal
         return False, None, None
-        return intersected, int_pt, normal
 
     def __repr__(self):
         return (

@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
-Created on Fri Jan 11 21:47:48 2019
+Created on Sat Dec  8 23:47:35 2018
 
 @author: samuel
 """
 
-
 import numpy as np
-from optics3d import Ray, Lens, Detector
+from optics3d import Ray, Mirror, Lens, Detector
 import matplotlib.pyplot as plt
 from general import set_axes_equal, wavelength_to_rgb
 from general_optics import image_rays
@@ -16,16 +15,14 @@ plt.close("all")
 
 
 image_f_number = 8
-object_size = 10  # mm
+object_size = 5  # mm
 image_half_angle = np.arctan(1 / 2 / image_f_number)  # radians
-
-
-lens_f = 25
+lens1_f = 50
 object_y = 0
-lens_y = 50 # 50
-object_dist = lens_y - object_y
-image_dist = 1 / (1 / lens_f - 1 / (object_dist))
-image_y = lens_y + image_dist
+lens1_y = 100  # 50
+object_dist = lens1_y - object_y
+image_dist = 1 / (1 / lens1_f - 1 / (object_dist))
+image_y = lens1_y + image_dist
 mag = image_dist / object_dist
 image_size = object_size * mag
 print(f"object_size = {object_size}")
@@ -36,50 +33,72 @@ print(f"mag = {mag}")
 print(f"image_size = {image_size}")
 
 
-
-lens_center = np.array([0, lens_y, 0])
+lens_center = np.array([0, lens1_y, 0])
 lens_normal = np.array([0, -1, 0])
 lens_tangent = np.array([0, 0, 1])
 lens1 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
-             tangent=lens_tangent, D=50, type="ideal", f=lens_f)
+             tangent=lens_tangent, D=25, type="ideal", f=lens1_f)
 
-detector_center = np.array([0, image_y, 0])
-detector_normal = np.array([0, -1, 0])
+mir_center = np.array([0, image_y, 0])
+mir_normal = np.array([0, -1, 0])
+dmd_normal = np.array([0.2, -1, 0])
+mir_tangent = np.array([0, 0, 1])
+mirror1 = Mirror(mir_center, normal=mir_normal, shape="rectangular_flat", tangent=mir_tangent, h=50, w=50,
+                 type="dmd", dmd_normal=dmd_normal)
+
+
+lens2_f = 25
+lens2_y = 150
+lens2_x = 20
+
+lens_center = np.array([lens2_x, lens2_y, 0])
+lens_normal = np.array([-0.4, 1, 0])
+lens_tangent = np.array([0, 0, 1])
+lens2 = Lens(lens_center, normal=lens_normal, shape="spherical_biconvex",
+             tangent=lens_tangent, D=25, type="ideal", f=lens2_f)
+
+detector_center = np.array([40, 100, 0])
+detector_normal = np.array([-0.6, 1, 0])
 detector_tangent = np.array([0, 0, 1])
 detector_h = 30
 detector_w = 30
 detector1 = Detector(detector_center, normal=detector_normal, shape="rectangular_flat",
                      tangent=detector_tangent, h=detector_h, w=detector_w)
 
-
 Optic_list = []
+Optic_list.append(mirror1)
 Optic_list.append(lens1)
+Optic_list.append(lens2)
 Optic_list.append(detector1)
 
-max_ray_run_distance = 150
+max_ray_run_distance = 350
+
+
 
 Ray_list = []
 origins, dirs, waves = image_rays(0, size=object_size, angle=image_half_angle, x_res=5, z_res=5, angle_res=3)
 for ix, origin in enumerate(origins):
     Ray_list.append(Ray(origins[ix], dirs[ix], wavelength=waves[ix], print_trajectory=False))
 
-
-
 for ray in Ray_list:
     ray.run(max_distance=max_ray_run_distance, optic_list=Optic_list)
 
 
 
-# 2d plots
 
+# 3d plots
 fig = plt.figure()
-ax = plt.axes()
+ax = plt.axes(projection='3d')
+# ax.set_aspect("equal")
+for optic in Optic_list:
+    optic.draw(ax, view="3d")
 for ray in Ray_list:
     ray_history = ray.get_plot_repr()
-    ax.plot(ray_history[:, 1], ray_history[:, 2], "-b")
-plt.grid(True)
-plt.axis("equal")
-
+    ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-r")
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('z')
+set_axes_equal(ax)
 
 
 # detector plot
@@ -98,21 +117,4 @@ plt.ylabel("z (mm)")
 
 
 
-
-
-# 3d plots
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-
-for optic in Optic_list:
-    optic.draw(ax, view="3d")
-for ray in Ray_list:
-    ray_history = ray.get_plot_repr()
-    ax.plot(ray_history[:, 0], ray_history[:, 1], ray_history[:, 2], "-b")
-
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-
-set_axes_equal(ax)
 plt.show()

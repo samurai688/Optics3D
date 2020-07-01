@@ -241,6 +241,11 @@
             could make a finite thickness version out of an ideal collimator element and ideal focusing element
             okay added those, they don't work as relay but it's okay could be useful at some point
             for finite thickness relays, you can do an intermediate ideal relay e.g. "script_testIdealRelay"
+            want to add a mirror-like component that can reflect off-axis, to model zero-order light from a DMD
+            okay cool, that wasn't too hard
+            made a setup of a scheimpflug dmd imaging, eyeballing the position of the 2nd lens and detector
+            it's kind of okay but not a great focus, probably need to do the real angles / geometry
+            it will also test the ideal lens component in a non-coordinate-aligned situation which is good
 
 
 
